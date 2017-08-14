@@ -1,6 +1,7 @@
+use std::path::Path;
 use rulinalg::matrix::Matrix;
 
-struct Scf {
+pub struct Scf {
     d: Matrix<f64>,
 }
 
