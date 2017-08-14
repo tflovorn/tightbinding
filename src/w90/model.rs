@@ -100,7 +100,7 @@ where
 /// The tight-binding Hamiltonian is specified in the Wannier90 hr.dat file
 /// one matrix element per line, with each line having the format:
 ///
-/// Ra  Rb  Rc  ip  i  Re{[H(R)]_{ip, i}}  Im{[H(R)]_{ip, i}}
+/// Ra  Rb  Rc  ip  i  Re{[H(R)]_{ip, i}}*degen[R]  Im{[H(R)]_{ip, i}}*degen[R]
 ///
 /// ip and i are tight-binding basis indices, and R is the displacement vector.
 /// ip varies the fastest, then i, then R.
