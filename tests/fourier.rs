@@ -9,6 +9,10 @@ use rulinalg::matrix::Matrix;
 use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
 
+/// One-band tight-binding model on the cubic lattice with uniform
+/// nearest-neighbor hopping.
+/// Has the spectrum
+///     \epsilon(k) = -2 * t * (cos(k_x a) + cos(k_y a) + cos(k_z a))
 struct CubicNNModel {
     hr: HashMap<[i32; 3], Matrix<Complex64>>,
     d: Matrix<f64>,
