@@ -23,7 +23,7 @@ pub fn hk_lat<M>(m: M, k_lat: &[f64]) -> Matrix<Complex64>
                 .map(|(&ki, &ri)| ki * (ri as f64))
                 .sum::<f64>();
 
-        let coeff = (Complex64::i() * Complex64::new(k_dot_r, 0.0)).exp();
+        let coeff = Complex64::new(0.0, k_dot_r).exp();
         hk += hr * coeff;
     }
 
@@ -36,7 +36,7 @@ pub fn hk_lat<M>(m: M, k_lat: &[f64]) -> Matrix<Complex64>
 /// # Arguments
 ///
 /// * `k_cart` - k in Cartesian coordinates. The units of k_cart entries
-/// are the inverse of the units of self.D entries.
+/// are the inverse of the units of m.D entries.
 pub fn hk_cart<M>(m: M, k_cart: &[f64]) -> Matrix<Complex64>
     where M: Model
 {
