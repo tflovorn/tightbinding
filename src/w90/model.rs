@@ -51,12 +51,26 @@ struct HrHeader {
     start_hr: usize,
 }
 
+/// Wannier90 hr.dat file header has the format:
+/// comment line
+/// number of bands
+/// number of displacement vectors (rs)
+/// list of degen values, 15 per line, total number equal to rs
 fn extract_hr_header(contents: &str) -> HrHeader {
-    let comment_line = String::new();
-    let bands = 0;
-    let rs = 0;
-    let degen = vec![];
-    let start_hr = 0;
+    let mut lines = contents.lines();
+
+    let comment_line = lines.next().unwrap().to_string();
+    let bands = lines.next().unwrap().trim().parse::<usize>().unwrap();
+    let rs = lines.next().unwrap().trim().parse::<usize>().unwrap();
+
+    let mut start_hr = 3;
+    let mut degen = vec![];
+    while degen.len() < rs {
+        let mut degen_line = lines.next().unwrap().trim().split(" ").map(|d| d.parse::<u32>().unwrap()).collect();
+        degen.append(&mut degen_line);
+
+        start_hr += 1;
+    }
 
     HrHeader { comment_line, bands, rs, degen, start_hr }
 }
