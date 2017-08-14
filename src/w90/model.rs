@@ -47,7 +47,6 @@ impl Model for W90Model {
 }
 
 struct HrHeader {
-    comment_line: String,
     bands: usize,
     rs: usize,
     degen: Vec<u32>,
@@ -67,9 +66,9 @@ struct HrHeader {
 ///
 /// * `contents` - the contents of the hr.dat file
 fn extract_hr_header(contents: &str) -> HrHeader {
-    let mut lines = contents.lines();
+    // Skip comment line.
+    let mut lines = contents.lines().skip(1);
 
-    let comment_line = lines.next().unwrap().to_string();
     let bands = lines.next().unwrap().trim().parse::<usize>().unwrap();
     let rs = lines.next().unwrap().trim().parse::<usize>().unwrap();
 
@@ -82,7 +81,7 @@ fn extract_hr_header(contents: &str) -> HrHeader {
         start_hr += 1;
     }
 
-    HrHeader { comment_line, bands, rs, degen, start_hr }
+    HrHeader { bands, rs, degen, start_hr }
 }
 
 /// Parse the tight-binding Hamiltonian from the hr.dat file given by contents.
