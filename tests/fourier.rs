@@ -9,37 +9,40 @@ use rulinalg::matrix::Matrix;
 use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
 
+mod common;
+use common::is_near;
+
 /// One-band tight-binding model on the cubic lattice with uniform
 /// nearest-neighbor hopping.
 /// Has the spectrum
 ///     \epsilon(k) = -2 * t * (cos(k_x a) + cos(k_y a) + cos(k_z a))
 struct CubicNNModel {
-    hr: HashMap<[i32; 3], Matrix<Complex64>>,
+    hrs: HashMap<[i32; 3], Matrix<Complex64>>,
     d: Matrix<f64>,
 }
 
 impl CubicNNModel {
     pub fn new(t: f64, a: f64) -> CubicNNModel {
-        let mut hr = HashMap::new();
+        let mut hrs = HashMap::new();
 
         let mt = Complex64::new(-t, 0.0);
 
-        hr.insert([1, 0, 0], Matrix::identity(1) * mt);
-        hr.insert([-1, 0, 0], Matrix::identity(1) * mt);
-        hr.insert([0, 1, 0], Matrix::identity(1) * mt);
-        hr.insert([0, -1, 0], Matrix::identity(1) * mt);
-        hr.insert([0, 0, 1], Matrix::identity(1) * mt);
-        hr.insert([0, 0, -1], Matrix::identity(1) * mt);
+        hrs.insert([1, 0, 0], Matrix::identity(1) * mt);
+        hrs.insert([-1, 0, 0], Matrix::identity(1) * mt);
+        hrs.insert([0, 1, 0], Matrix::identity(1) * mt);
+        hrs.insert([0, -1, 0], Matrix::identity(1) * mt);
+        hrs.insert([0, 0, 1], Matrix::identity(1) * mt);
+        hrs.insert([0, 0, -1], Matrix::identity(1) * mt);
 
         let d = Matrix::identity(1) * a;
 
-        CubicNNModel { hr, d }
+        CubicNNModel { hrs, d }
     }
 }
 
 impl Model for CubicNNModel {
     fn hrs(&self) -> &HashMap<[i32; 3], Matrix<Complex64>> {
-        &self.hr
+        &self.hrs
     }
 
     fn bands(&self) -> usize {
@@ -49,16 +52,6 @@ impl Model for CubicNNModel {
     fn d(&self) -> &Matrix<f64> {
         &self.d
     }
-}
-
-fn is_near(x: Complex64, y: Complex64, eps_abs: f64, eps_rel: f64) -> bool {
-    let diff = (x - y).norm();
-
-    if diff < eps_abs {
-        return true;
-    }
-
-    diff < eps_rel * x.norm().max(y.norm())
 }
 
 #[test]

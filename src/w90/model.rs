@@ -1,5 +1,4 @@
 use std::str;
-use std::fmt;
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs::File;
@@ -11,7 +10,7 @@ use rulinalg::matrix::Matrix;
 use model::Model;
 
 pub struct W90Model {
-    hr: HashMap<[i32; 3], Matrix<Complex64>>,
+    hrs: HashMap<[i32; 3], Matrix<Complex64>>,
     bands: usize,
     d: Matrix<f64>,
 }
@@ -27,15 +26,15 @@ impl W90Model {
 
         let header = extract_hr_header(&contents);
 
-        let hr = extract_hr_model(&contents, &header);
+        let hrs = extract_hr_model(&contents, &header);
 
-        Ok(W90Model { hr, bands: header.bands, d })
+        Ok(W90Model { hrs, bands: header.bands, d })
     }
 }
 
 impl Model for W90Model {
     fn hrs(&self) -> &HashMap<[i32; 3], Matrix<Complex64>> {
-        &self.hr
+        &self.hrs
     }
 
     fn bands(&self) -> usize {
@@ -77,22 +76,13 @@ fn extract_hr_header(contents: &str) -> HrHeader {
     let mut start_hr = 3;
     let mut degen = vec![];
     while degen.len() < rs {
-        let mut degen_line = lines.next().unwrap().trim().split(" ").map(|d| d.parse::<u32>().unwrap()).collect();
+        let mut degen_line = lines.next().unwrap().trim().split(" ").filter(|d| d.len() > 0).map(|d| d.parse::<u32>().unwrap()).collect();
         degen.append(&mut degen_line);
 
         start_hr += 1;
     }
 
     HrHeader { comment_line, bands, rs, degen, start_hr }
-}
-
-/// Get the next value from the Split xs, parsing it as type F.
-fn next_value<F>(xs: &mut str::Split<&str>) -> F
-where
-    F: str::FromStr,
-    F::Err : fmt::Debug
-{
-    xs.next().unwrap().parse().unwrap()
 }
 
 /// Parse the tight-binding Hamiltonian from the hr.dat file given by contents.
@@ -104,6 +94,8 @@ where
 ///
 /// ip and i are tight-binding basis indices, and R is the displacement vector.
 /// ip varies the fastest, then i, then R.
+/// ip and i are given in the file starting at 1, not 0. We store them here
+/// starting at 0.
 ///
 /// # Arguments
 /// * `contents` - the contents of the hr.dat file
@@ -111,25 +103,21 @@ where
 /// extract_hr_header().
 fn extract_hr_model(contents: &str, header: &HrHeader) -> HashMap<[i32; 3], Matrix<Complex64>> {
     let mut lines = contents.lines().skip(header.start_hr);
-    let mut hr = HashMap::new();
+    let mut hrs = HashMap::new();
 
-    let mut r_index = 0;
-    let mut i = 0;
-    let mut ip = 0;
-
-    while r_index < header.rs {
-        let mut hr_entry = Matrix::<Complex64>::zeros(header.bands, header.bands);
+    for r_index in 0..header.rs {
+        let mut hrs_entry = Matrix::<Complex64>::zeros(header.bands, header.bands);
         let mut r = [0, 0, 0];
 
-        while i < header.bands {
-            while ip < header.bands {
-                let mut line_contents = lines.next().unwrap().trim().split(" ");
-                let ra: i32 = next_value(&mut line_contents);
-                let rb: i32 = next_value(&mut line_contents);
-                let rc: i32 = next_value(&mut line_contents);
+        for i in 0..header.bands {
+            for ip in 0..header.bands {
+                let line_contents = lines.next().unwrap().trim().split(" ").filter(|d| d.len() > 0).collect::<Vec<&str>>();
+                let ra: i32 = line_contents[0].parse().unwrap();
+                let rb: i32 = line_contents[1].parse().unwrap();
+                let rc: i32 = line_contents[2].parse().unwrap();
 
-                let ip_from_line = next_value::<usize>(&mut line_contents) - 1;
-                let i_from_line = next_value::<usize>(&mut line_contents) - 1;
+                let ip_from_line = line_contents[3].parse::<usize>().unwrap() - 1;
+                let i_from_line = line_contents[4].parse::<usize>().unwrap() - 1;
 
                 assert_eq!(ip, ip_from_line);
                 assert_eq!(i, i_from_line);
@@ -140,21 +128,18 @@ fn extract_hr_model(contents: &str, header: &HrHeader) -> HashMap<[i32; 3], Matr
                     assert_eq!(r, [ra, rb, rc]);
                 }
 
-                let val_re: f64 = next_value(&mut line_contents);
-                let val_im: f64 = next_value(&mut line_contents);
+                let val_re: f64 = line_contents[5].parse().unwrap();
+                let val_im: f64 = line_contents[6].parse().unwrap();
 
                 let degen = header.degen[r_index] as f64;
 
-                hr_entry[[ip, i]] = Complex64::new(val_re / degen, val_im / degen);
-                ip += 1;
+                hrs_entry[[ip, i]] = Complex64::new(val_re / degen, val_im / degen);
             }
 
-            i += 1;
         }
 
-        hr.insert(r, hr_entry);
-        r_index += 1;
+        hrs.insert(r, hrs_entry);
     }
 
-    hr
+    hrs
 }
