@@ -11,7 +11,8 @@ use model::Model;
 ///
 /// * `k_lat` - k in lattice coordinates
 pub fn hk_lat<M>(m: M, k_lat: &[f64]) -> Matrix<Complex64>
-    where M: Model
+where
+    M: Model,
 {
     let mut hk = Matrix::<Complex64>::zeros(m.bands(), m.bands());
 
@@ -38,7 +39,8 @@ pub fn hk_lat<M>(m: M, k_lat: &[f64]) -> Matrix<Complex64>
 /// * `k_cart` - k in Cartesian coordinates. The units of k_cart entries
 /// are the inverse of the units of m.D entries.
 pub fn hk_cart<M>(m: M, k_cart: &[f64]) -> Matrix<Complex64>
-    where M: Model
+where
+    M: Model,
 {
     let k_cart_mat = Matrix::<f64>::new(1, 3, k_cart);
     let k_lat_mat = m.d() * k_cart_mat * (1.0 / (2.0 * PI));
