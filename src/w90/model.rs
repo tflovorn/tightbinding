@@ -21,14 +21,20 @@ impl W90Model {
 
         {
             let mut f = File::open(hr_path)?;
-            f.read_to_string(&mut contents).expect("error reading hr file");
+            f.read_to_string(&mut contents).expect(
+                "error reading hr file",
+            );
         }
 
         let header = extract_hr_header(&contents);
 
         let hrs = extract_hr_model(&contents, &header);
 
-        Ok(W90Model { hrs, bands: header.bands, d })
+        Ok(W90Model {
+            hrs,
+            bands: header.bands,
+            d,
+        })
     }
 }
 
@@ -75,13 +81,25 @@ fn extract_hr_header(contents: &str) -> HrHeader {
     let mut start_hr = 3;
     let mut degen = vec![];
     while degen.len() < rs {
-        let mut degen_line = lines.next().unwrap().trim().split(" ").filter(|d| d.len() > 0).map(|d| d.parse::<u32>().unwrap()).collect();
+        let mut degen_line = lines
+            .next()
+            .unwrap()
+            .trim()
+            .split(" ")
+            .filter(|d| d.len() > 0)
+            .map(|d| d.parse::<u32>().unwrap())
+            .collect();
         degen.append(&mut degen_line);
 
         start_hr += 1;
     }
 
-    HrHeader { bands, rs, degen, start_hr }
+    HrHeader {
+        bands,
+        rs,
+        degen,
+        start_hr,
+    }
 }
 
 /// Parse the tight-binding Hamiltonian from the hr.dat file given by contents.
@@ -110,7 +128,13 @@ fn extract_hr_model(contents: &str, header: &HrHeader) -> HashMap<[i32; 3], Matr
 
         for i in 0..header.bands {
             for ip in 0..header.bands {
-                let line_contents = lines.next().unwrap().trim().split(" ").filter(|d| d.len() > 0).collect::<Vec<&str>>();
+                let line_contents = lines
+                    .next()
+                    .unwrap()
+                    .trim()
+                    .split(" ")
+                    .filter(|d| d.len() > 0)
+                    .collect::<Vec<&str>>();
                 let ra: i32 = line_contents[0].parse().unwrap();
                 let rb: i32 = line_contents[1].parse().unwrap();
                 let rc: i32 = line_contents[2].parse().unwrap();

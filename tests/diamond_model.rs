@@ -25,12 +25,42 @@ fn diamond_model() {
     let eps_abs = 1e-12; // eV
     let eps_rel = 1e-12;
 
-    assert!(is_near(m.hrs()[&[-3, 1, 1]][[0, 0]], Complex64::new(0.007378 / 4.0, 0.0), eps_abs, eps_rel));
-    assert!(is_near(m.hrs()[&[-3, 1, 1]][[2, 1]], Complex64::new(-0.008540 / 4.0, 0.0), eps_abs, eps_rel));
+    assert!(is_near(
+        m.hrs()[&[-3, 1, 1]][[0, 0]],
+        Complex64::new(0.007378 / 4.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
+    assert!(is_near(
+        m.hrs()[&[-3, 1, 1]][[2, 1]],
+        Complex64::new(-0.008540 / 4.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
 
-    assert!(is_near(m.hrs()[&[3, -1, -1]][[0, 0]], Complex64::new(0.007378 / 4.0, 0.0), eps_abs, eps_rel));
-    assert!(is_near(m.hrs()[&[3, -1, -1]][[2, 1]], Complex64::new(-0.008540 / 4.0, 0.0), eps_abs, eps_rel));
+    assert!(is_near(
+        m.hrs()[&[3, -1, -1]][[0, 0]],
+        Complex64::new(0.007378 / 4.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
+    assert!(is_near(
+        m.hrs()[&[3, -1, -1]][[2, 1]],
+        Complex64::new(-0.008540 / 4.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
 
-    assert!(is_near(m.hrs()[&[-2, -2, 2]][[0, 0]], Complex64::new(0.011647 / 6.0, 0.0), eps_abs, eps_rel));
-    assert!(is_near(m.hrs()[&[-2, -2, 2]][[2, 3]], Complex64::new(-0.003502 / 6.0, 0.0), eps_abs, eps_rel));
+    assert!(is_near(
+        m.hrs()[&[-2, -2, 2]][[0, 0]],
+        Complex64::new(0.011647 / 6.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
+    assert!(is_near(
+        m.hrs()[&[-2, -2, 2]][[2, 3]],
+        Complex64::new(-0.003502 / 6.0, 0.0),
+        eps_abs,
+        eps_rel,
+    ));
 }
