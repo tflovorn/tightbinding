@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs::File;
+use std::io;
 use std::io::Read;
 use num_complex::Complex64;
 use rulinalg::matrix::Matrix;
@@ -14,18 +15,19 @@ pub struct W90Model {
 }
 
 impl W90Model {
-    pub fn new<P: AsRef<Path>>(hr_path: P, d: Matrix<f64>) -> W90Model {
-        // TODO should handle this with Result: can happen due to user error.
-        let mut f = File::open(hr_path).expect("hr file not found");
-
+    pub fn new<P: AsRef<Path>>(hr_path: P, d: Matrix<f64>) -> Result<W90Model, io::Error> {
         let mut contents = String::new();
-        f.read_to_string(&mut contents).expect("error reading hr file");
+
+        {
+            let mut f = File::open(hr_path)?;
+            f.read_to_string(&mut contents).expect("error reading hr file");
+        }
 
         let header = extract_hr_header(&contents);
 
         let hr = extract_hr_model(&contents, &header);
 
-        W90Model { hr, bands: header.bands, d }
+        Ok(W90Model { hr, bands: header.bands, d })
     }
 }
 
