@@ -22,7 +22,7 @@ impl W90Model {
         {
             let mut f = File::open(hr_path)?;
             f.read_to_string(&mut contents).expect(
-                "error reading hr file",
+                "error reading hr.dat file",
             );
         }
 
@@ -38,15 +38,23 @@ impl W90Model {
     }
 }
 
+/// Tight-binding model specified by (R, H(R)) pairs, as extracted from
+/// Wannier90 calculation.
 impl Model for W90Model {
+    /// A collection of (displacement vector, hopping matrix) pairs, (R, H(R)).
+    /// H(R) matrix elements are given in units of eV.
     fn hrs(&self) -> &HashMap<[i32; 3], Matrix<Complex64>> {
         &self.hrs
     }
 
+    /// The number of bands in the model. Each matrix value in hrs is
+    /// nbands x nbands.
     fn bands(&self) -> usize {
         self.bands
     }
 
+    /// A matrix with columns giving the lattice vectors in Cartesian
+    /// coordinates in units of Angstroms.
     fn d(&self) -> &Matrix<f64> {
         &self.d
     }
