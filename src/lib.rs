@@ -3,6 +3,7 @@ extern crate rulinalg;
 extern crate sxd_document;
 extern crate sxd_xpath;
 
+pub mod float;
 pub mod units;
 
 mod model;

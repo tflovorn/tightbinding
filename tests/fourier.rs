@@ -6,11 +6,9 @@ use std::f64::consts::PI;
 use std::collections::HashMap;
 use num_complex::Complex64;
 use rulinalg::matrix::Matrix;
+use tightbinding::float::is_near_complex;
 use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
-
-mod common;
-use common::is_near_complex;
 
 /// One-band tight-binding model on the cubic lattice with uniform
 /// nearest-neighbor hopping.

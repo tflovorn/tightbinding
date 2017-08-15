@@ -1,5 +1,3 @@
-extern crate num_complex;
-
 use num_complex::Complex64;
 
 pub fn is_near_float(x: f64, y: f64, eps_abs: f64, eps_rel: f64) -> bool {

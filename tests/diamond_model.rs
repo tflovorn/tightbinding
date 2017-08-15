@@ -4,13 +4,11 @@ extern crate tightbinding;
 
 use num_complex::Complex64;
 use rulinalg::matrix::Matrix;
+use tightbinding::float::{is_near_float, is_near_complex};
 use tightbinding::Model;
 use tightbinding::units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};
 use tightbinding::w90::W90Model;
 use tightbinding::qe::Scf;
-
-mod common;
-use common::{is_near_float, is_near_complex};
 
 #[test]
 fn diamond_model() {
