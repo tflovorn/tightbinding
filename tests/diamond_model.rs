@@ -18,13 +18,21 @@ fn diamond_model() {
     let scf_data = Scf::new(scf_path).unwrap();
     let d = scf_data.d;
 
-    let expected_d_data = vec![-3.05, 0.0, -3.05, 0.0, 3.05, 3.05, 3.05, 3.05, 0.0].iter().map(|x| x * ANGSTROM_PER_BOHR).collect();
+    let expected_d_data = vec![-3.05, 0.0, -3.05, 0.0, 3.05, 3.05, 3.05, 3.05, 0.0]
+        .iter()
+        .map(|x| x * ANGSTROM_PER_BOHR)
+        .collect();
     check_d(&d, expected_d_data);
 
     let expected_fermi = 7.128552714182526e-1 * EV_PER_HARTREE;
     let eps_abs_fermi = 1e-12; // eV
     let eps_rel_fermi = 1e-12;
-    assert!(is_near_float(expected_fermi, scf_data.fermi, eps_abs_fermi, eps_rel_fermi));
+    assert!(is_near_float(
+        expected_fermi,
+        scf_data.fermi,
+        eps_abs_fermi,
+        eps_rel_fermi,
+    ));
 
     let m = W90Model::new(hr_path, d).unwrap();
 

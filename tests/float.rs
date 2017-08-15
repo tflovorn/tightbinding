@@ -21,6 +21,16 @@ fn is_near() {
     assert!(is_near_complex(x, x + d1, eps_abs, eps_rel));
     assert!(!is_near_complex(x, x + d2, eps_abs, eps_rel));
 
-    assert!(is_near_complex(x, x + Complex64::i() * d1, eps_abs, eps_rel));
-    assert!(!is_near_complex(x, x + Complex64::i() * d2, eps_abs, eps_rel));
+    assert!(is_near_complex(
+        x,
+        x + Complex64::i() * d1,
+        eps_abs,
+        eps_rel,
+    ));
+    assert!(!is_near_complex(
+        x,
+        x + Complex64::i() * d2,
+        eps_abs,
+        eps_rel,
+    ));
 }
