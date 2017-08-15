@@ -10,7 +10,7 @@ use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
 
 mod common;
-use common::is_near;
+use common::is_near_complex;
 
 /// One-band tight-binding model on the cubic lattice with uniform
 /// nearest-neighbor hopping.
@@ -69,5 +69,5 @@ fn cubic_nn() {
     let eps_abs = 1e-12 * t;
     let eps_rel = 1e-12;
 
-    assert!(is_near(hk[[0, 0]], expected, eps_abs, eps_rel));
+    assert!(is_near_complex(hk[[0, 0]], expected, eps_abs, eps_rel));
 }

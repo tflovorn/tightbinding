@@ -7,6 +7,8 @@ use sxd_document::parser::parse;
 use sxd_document::dom::Document;
 use sxd_xpath::evaluate_xpath;
 
+use units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};
+
 pub struct Scf {
     /// A matrix with columns giving the lattice vectors in Cartesian
     /// coordinates in units of Angstroms.
@@ -35,11 +37,9 @@ impl Scf {
         let package = parse(&contents).unwrap();
         let doc = package.as_document();
 
-        let angstrom_per_bohr = 0.52917721067;
-        let d = extract_d_bohr(&doc) * angstrom_per_bohr;
+        let d = extract_d_bohr(&doc) * ANGSTROM_PER_BOHR;
 
-        let ev_per_hartree = 27.21138602;
-        let fermi = extract_fermi_hartree(&doc) * ev_per_hartree;
+        let fermi = extract_fermi_hartree(&doc) * EV_PER_HARTREE;
 
         Ok(Scf { d, fermi })
     }
@@ -71,5 +71,14 @@ fn extract_d_bohr(doc: &Document) -> Matrix<f64> {
 }
 
 fn extract_fermi_hartree(doc: &Document) -> f64 {
-    0.0
+    let base = "/Root/BAND_STRUCTURE_INFO";
+    let units_path = format!("{}/UNITS_FOR_ENERGIES/@UNITS", base);
+    let units = evaluate_xpath(doc, &units_path).unwrap().into_string();
+    assert_eq!(units, "Hartree");
+
+    let fermi_path = format!("{}/FERMI_ENERGY", base);
+    let fermi_text = evaluate_xpath(doc, &fermi_path).unwrap().into_string();
+    let fermi = fermi_text.trim().parse().unwrap();
+
+    fermi
 }

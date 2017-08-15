@@ -5,11 +5,12 @@ extern crate tightbinding;
 use num_complex::Complex64;
 use rulinalg::matrix::Matrix;
 use tightbinding::Model;
+use tightbinding::units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};
 use tightbinding::w90::W90Model;
 use tightbinding::qe::Scf;
 
 mod common;
-use common::is_near;
+use common::{is_near_float, is_near_complex};
 
 #[test]
 fn diamond_model() {
@@ -19,18 +20,13 @@ fn diamond_model() {
     let scf_data = Scf::new(scf_path).unwrap();
     let d = scf_data.d;
 
-    let expected_d_data = vec![
-        -1.6139904925435,
-        0.0,
-        -1.6139904925435,
-        0.0,
-        1.6139904925435,
-        1.6139904925435,
-        1.6139904925435,
-        1.6139904925435,
-        0.0,
-    ];
+    let expected_d_data = vec![-3.05, 0.0, -3.05, 0.0, 3.05, 3.05, 3.05, 3.05, 0.0].iter().map(|x| x * ANGSTROM_PER_BOHR).collect();
     check_d(&d, expected_d_data);
+
+    let expected_fermi = 7.128552714182526e-1 * EV_PER_HARTREE;
+    let eps_abs_fermi = 1e-12; // eV
+    let eps_rel_fermi = 1e-12;
+    assert!(is_near_float(expected_fermi, scf_data.fermi, eps_abs_fermi, eps_rel_fermi));
 
     let m = W90Model::new(hr_path, d).unwrap();
 
@@ -62,10 +58,8 @@ fn check_d(d: &Matrix<f64>, expected_d_data: Vec<f64>) {
     let eps_abs = 1e-12; // Angstrom
     let eps_rel = 1e-12;
 
-    for (x, y) in expected_d_data.iter().zip(d.data()) {
-        let diff = (x - y).abs();
-
-        assert!(diff < eps_abs || diff < eps_rel * x.abs().max(y.abs()));
+    for (&x, &y) in expected_d_data.iter().zip(d.data()) {
+        assert!(is_near_float(x, y, eps_abs, eps_rel));
     }
 }
 
@@ -79,6 +73,6 @@ fn check_hrs(
     let eps_rel = 1e-12;
 
     for ((r, indexes), val) in expected_rs.iter().zip(expected_indexes).zip(expected_vals) {
-        assert!(is_near(m.hrs()[r][indexes], val, eps_abs, eps_rel));
+        assert!(is_near_complex(m.hrs()[r][indexes], val, eps_abs, eps_rel));
     }
 }
