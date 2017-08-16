@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+use std::cmp::min;
 use std::str;
 use std::path::Path;
 use std::fs::File;
@@ -8,11 +10,11 @@ use vec_util::transpose_vecs;
 
 pub struct DftBands {
     ks: Vec<[f64; 3]>,
-    Emks: Vec<Vec<f64>>,
+    emks: Vec<Vec<f64>>,
 }
 
 impl DftBands {
-    pub fn new<P: AsRef<Path>>(bands_path: P) -> Result<DftBands, io::Error> {
+    pub fn new<P: AsRef<Path>>(bands_path: P, alat: f64) -> Result<DftBands, io::Error> {
         let mut contents = String::new();
 
         {
@@ -22,16 +24,13 @@ impl DftBands {
             );
         }
 
-        let (bands, num_ks) = extract_bands_header(&contents);
+        let (num_bands, num_ks) = extract_bands_header(&contents);
 
-        println!("bands: {}", bands);
-        println!("num_ks: {}", num_ks);
+        let (ks, ekms) = extract_bands(&contents, num_bands, num_ks, alat);
 
-        let (ks, Ekms) = extract_bands(&contents, bands, num_ks);
+        let emks = transpose_vecs(&ekms);
 
-        let Emks = transpose_vecs(&Ekms);
-
-        Ok(DftBands { ks, Emks })
+        Ok(DftBands { ks, emks })
     }
     /// A list of the k-points in the calculation, given in Cartesian
     /// coordinates in units of Angstrom^{-1}.
@@ -45,31 +44,101 @@ impl DftBands {
     ///
     /// The number of bands in the calculation is given by the length of Emks().
     /// Each Emks()[m] has the same length, equal to the length of ks().
-    pub fn Emks(&self) -> &Vec<Vec<f64>> {
-        &self.Emks
+    pub fn emks(&self) -> &Vec<Vec<f64>> {
+        &self.emks
     }
 }
 
 fn extract_bands_header(contents: &str) -> (usize, usize) {
     let header_line = contents.lines().next().unwrap();
-    
+
     // Header line has the format:
-    // 
+    //
     // &plot nbnd= 110, nks=   241 /
     //
     // To extract nbnd and nks values, we take the value between the first "=" and ","
     // and between the second "=" and "/".
-    
-    let bands = header_line.split("=").skip(1).next().unwrap().split(",").next().unwrap().trim().parse().unwrap();
 
-    let num_ks = header_line.split("=").skip(2).next().unwrap().split("/").next().unwrap().trim().parse().unwrap();
+    let num_bands = header_line
+        .split("=")
+        .skip(1)
+        .next()
+        .unwrap()
+        .split(",")
+        .next()
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
 
-    (bands, num_ks)
+    let num_ks = header_line
+        .split("=")
+        .skip(2)
+        .next()
+        .unwrap()
+        .split("/")
+        .next()
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+
+    (num_bands, num_ks)
 }
 
-fn extract_bands(contents: &str, bands: usize, num_ks: usize) -> (Vec<[f64; 3]>, Vec<Vec<f64>>) {
-    let mut ks = Vec::new();
-    let mut Ekms = Vec::new();
+fn extract_bands(
+    contents: &str,
+    num_bands: usize,
+    num_ks: usize,
+    alat: f64,
+) -> (Vec<[f64; 3]>, Vec<Vec<f64>>) {
+    // Skip header line.
+    let mut lines = contents.lines().skip(1);
 
-    (ks, Ekms)
+    let mut ks = Vec::new();
+    let mut ekms: Vec<Vec<f64>> = Vec::new();
+
+    // Band entries have the format:
+    //   kx  ky  kz
+    // E0   E1   E2  ... E8   E9
+    // E10  E11  E12 ... E18  E19
+    // ...
+    //
+    // kx, ky, kz are in units of 2pi/alat.
+    // Energies are in units of eV.
+    //
+    // kx, ky, kz can be safely split on " ".
+    // Energies may take the full space and may not be split on " " - the exact
+    // column values must be used.
+
+    let bytes_per_e = 9;
+    let es_per_line = 10;
+
+    for _ in 0..num_ks {
+        let k_line = lines.next().unwrap().trim();
+        let this_ks = k_line
+            .split(" ")
+            .filter(|d| d.len() > 0)
+            .map(|d| (2.0 * PI / alat) * d.parse::<f64>().unwrap())
+            .collect::<Vec<f64>>();
+        assert_eq!(this_ks.len(), 3);
+        ks.push([this_ks[0], this_ks[1], this_ks[2]]);
+
+        let mut ek = Vec::new();
+
+        while ek.len() < num_bands {
+            let e_line = lines.next().unwrap();
+            for n in 0..min(es_per_line, num_bands - ek.len()) {
+                let (e_start, e_stop) = (bytes_per_e * n, bytes_per_e * (n + 1));
+
+                let e = e_line[e_start..e_stop].trim().parse().unwrap();
+
+                ek.push(e);
+            }
+        }
+
+        ekms.push(ek);
+    }
+
+    (ks, ekms)
 }

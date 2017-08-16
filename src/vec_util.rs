@@ -1,5 +1,5 @@
 /// Given a vector of vectors with elements `x[i][j]`, return the corresponding
-/// vector of vectors `y` where `y[j][i] == x[i][j]`. 
+/// vector of vectors `y` where `y[j][i] == x[i][j]`.
 ///
 /// Each element of x has clone() called on it to construct y.
 ///
