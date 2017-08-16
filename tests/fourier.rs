@@ -61,7 +61,7 @@ fn cubic_nn() {
 
     let k_cart = [PI / a, PI / a, PI / a];
 
-    let hk = hk_cart(m, &k_cart);
+    let hk = hk_cart(&m, &k_cart);
     let expected = Complex64::new(6.0 * t, 0.0);
 
     let eps_abs = 1e-12 * t;

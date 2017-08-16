@@ -1,5 +1,6 @@
 use num_complex::Complex64;
 use rulinalg::matrix::Matrix;
+use itertools::multizip;
 
 use model::Model;
 use fourier::hk_lat;
@@ -34,9 +35,10 @@ pub fn grid_index(point: &[usize; 3], dims: &[usize; 3]) -> usize {
 pub fn grid_k(point: &[usize; 3], dims: &[usize; 3], k_start: &[f64; 3], k_stop: &[f64; 3]) -> [f64; 3] {
     let mut k = [0.0, 0.0, 0.0];
 
-    for (dim_index, (i, (dim, (start, stop)))) in point.iter().zip(dims.iter()).zip(k_start.iter()).zip(k_stop.iter()).enumerate() {
-        let step = (stop - start) / (dim as f64);
-        k[dim_index] = start + (i as f64) * step;
+    //for (dim_index, ((i, (dim, start)), stop)) in point.iter().zip(dims.iter()).zip(k_start.iter()).zip(k_stop.iter()).enumerate() {
+    for (dim_index, (i, dim, start, stop)) in multizip((point, dims, k_start, k_stop)).enumerate() {
+        let step = (stop - start) / (*dim as f64);
+        k[dim_index] = start + (*i as f64) * step;
     }
 
     k
@@ -51,7 +53,7 @@ pub struct EvecCache<M: Model> {
     evec: Vec<Matrix<Complex64>>,
 }
 
-impl EvecCache<M: Model> {
+impl<M: Model> EvecCache<M> {
     /// Construct a new EvecCache from the given model, with the given number of k-points in
     /// each reciprocal lattice direction and occupying the given region of the Brillouin zone
     /// (to sample the full Brillouin zone, set k_start = [0.0, 0.0, 0.0] and
@@ -74,29 +76,32 @@ impl EvecCache<M: Model> {
         for i0 in 0..dims[0] + 1 {
             for i1 in 0..dims[1] + 1 {
                 for i2 in 0..dims[2] + 1 {
-                    let k = grid_k([i0, i1, i2], dims, k_start, k_stop);
+                    let k = grid_k(&[i0, i1, i2], &dims, &k_start, &k_stop);
 
-                    let hk = hk_lat(m, k);
+                    let hk = hk_lat(&m, &k);
                     
                     // TODO have to use something other than rulinalg:
                     // eigendecomp() documentation says:
                     // "The eigenvectors are only gauranteed to be correct if the matrix is
                     // real-symmetric."
-                    let (es, u) = hk.eigendecomp().unwrap();
+                    // eigendecomp() is not even implemented for non-float elements.
+                    //let (es, u) = hk.eigendecomp().unwrap();
+                    let es = Vec::new();
+                    let u = Matrix::<Complex64>::zeros(m.bands(), m.bands());
 
                     energy.push(es);
-                    evecs.push(u);
+                    evec.push(u);
                 }
             }
         }
 
-        EvecCache { m, dims, k_start, k_stop, energy, evecs }
+        EvecCache { m, dims, k_start, k_stop, energy, evec }
     }
 }
 
-impl EnergyGrid for EvecCache<M: Model> {
+impl<M: Model> EnergyGrid for EvecCache<M> {
     fn energy(&self, grid_index: usize) -> &Vec<f64> {
-        self.energy[grid_index]
+        &self.energy[grid_index]
     }
 
     fn dims(&self) -> [usize; 3] {
@@ -104,8 +109,8 @@ impl EnergyGrid for EvecCache<M: Model> {
     }
 }
 
-impl EvecGrid for EvecCache<M: Model> {
+impl<M: Model> EvecGrid for EvecCache<M> {
     fn evec(&self, grid_index: usize) -> &Matrix<Complex64> {
-        self.evec[grid_index]
+        &self.evec[grid_index]
     }
 }

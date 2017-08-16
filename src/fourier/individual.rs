@@ -10,7 +10,7 @@ use model::Model;
 /// # Arguments
 ///
 /// * `k_lat` - k in lattice coordinates
-pub fn hk_lat<M: Model>(m: M, k_lat: &[f64]) -> Matrix<Complex64> {
+pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64]) -> Matrix<Complex64> {
     let mut hk = Matrix::<Complex64>::zeros(m.bands(), m.bands());
 
     for (r_lat, hr) in m.hrs() {
@@ -35,7 +35,7 @@ pub fn hk_lat<M: Model>(m: M, k_lat: &[f64]) -> Matrix<Complex64> {
 ///
 /// * `k_cart` - k in Cartesian coordinates. The units of k_cart entries
 /// are the inverse of the units of m.D entries.
-pub fn hk_cart<M: Model>(m: M, k_cart: &[f64]) -> Matrix<Complex64> {
+pub fn hk_cart<M: Model>(m: &M, k_cart: &[f64]) -> Matrix<Complex64> {
     let k_cart_mat = Matrix::<f64>::new(1, 3, k_cart);
     let k_lat_mat = m.d() * k_cart_mat * (1.0 / (2.0 * PI));
     let k_lat = k_lat_mat.data();
