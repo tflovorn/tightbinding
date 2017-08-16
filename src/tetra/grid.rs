@@ -1,5 +1,7 @@
 use num_complex::Complex64;
 use ndarray::Array2;
+use linxal::eigenvalues::SymEigen;
+use linxal::types::Symmetric;
 use itertools::multizip;
 
 use model::Model;
@@ -64,8 +66,10 @@ impl<M: Model> EvecCache<M> {
     /// k_stop = [1.0, 1.0, 1.0]).
     ///
     /// TODO convert k from original coordinates to coordinates with sign / order of G permuted to
-    /// minimize tetrahedron size: "In order to minimize interpolation distances the shortest main
-    /// diagonal is chosen."
+    /// minimize tetrahedron length: "In order to minimize interpolation distances the shortest
+    /// main diagonal is chosen." Ensure that k_start, k_stop are used correctly when this is done:
+    /// permute elements / change sign of k_start, k_stop in the same way as reciprocal lattice
+    /// vectors are permuted / changed sign.
     ///
     /// TODO consider symmetry operations which make some k-points redundant.
     /// Since Wannier90 makes no guarantees about preserving symmetry
@@ -84,17 +88,10 @@ impl<M: Model> EvecCache<M> {
 
                     let hk = hk_lat(&m, &k);
 
-                    // TODO have to use something other than rulinalg:
-                    // eigendecomp() documentation says:
-                    // "The eigenvectors are only gauranteed to be correct if the matrix is
-                    // real-symmetric."
-                    // eigendecomp() is not even implemented for non-float elements.
-                    //let (es, u) = hk.eigendecomp().unwrap();
-                    let es = Vec::new();
-                    let u = Array2::<Complex64>::zeros((m.bands(), m.bands()));
+                    let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
 
-                    energy.push(es);
-                    evec.push(u);
+                    energy.push(solution.values.to_vec());
+                    evec.push(solution.right_vectors.unwrap());
                 }
             }
         }

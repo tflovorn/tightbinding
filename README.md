@@ -11,7 +11,3 @@ Test data is stored in Git LFS. Before cloning the repository, install Git LFS:
 This assumes $HOME/bin is on your $PATH. If it is not, add the following to ~/.bashrc:
 
     export PATH=$HOME/bin:$PATH
-
-linxal requires OpenBLAS by default. To install OpenBLAS on Debain-based distributions:
-
-    sudo apt-get install libopenblas-dev
