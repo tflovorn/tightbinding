@@ -9,6 +9,7 @@ use rulinalg::matrix::Matrix;
 
 use model::Model;
 
+#[derive(Clone)]
 pub struct W90Model {
     hrs: HashMap<[i32; 3], Matrix<Complex64>>,
     bands: usize,
