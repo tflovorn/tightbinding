@@ -1,5 +1,5 @@
 use num_complex::Complex64;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 use itertools::multizip;
 
 use model::Model;
@@ -22,7 +22,7 @@ pub trait EnergyGrid {
 /// The eigenvectors are sorted in order of the corresponding eigenenergies.
 pub trait EvecGrid: EnergyGrid {
     /// Eigenvectors associated with the k-point at grid_index.
-    fn evec(&self, grid_index: usize) -> &Matrix<Complex64>;
+    fn evec(&self, grid_index: usize) -> &Array2<Complex64>;
 }
 
 /// Compute the linearized grid index associated with the given k-point index.
@@ -32,10 +32,14 @@ pub fn grid_index(point: &[usize; 3], dims: &[usize; 3]) -> usize {
     point[0] + (dims[0] + 1) * (point[1] + point[2] * (dims[1] + 1))
 }
 
-pub fn grid_k(point: &[usize; 3], dims: &[usize; 3], k_start: &[f64; 3], k_stop: &[f64; 3]) -> [f64; 3] {
+pub fn grid_k(
+    point: &[usize; 3],
+    dims: &[usize; 3],
+    k_start: &[f64; 3],
+    k_stop: &[f64; 3],
+) -> [f64; 3] {
     let mut k = [0.0, 0.0, 0.0];
 
-    //for (dim_index, ((i, (dim, start)), stop)) in point.iter().zip(dims.iter()).zip(k_start.iter()).zip(k_stop.iter()).enumerate() {
     for (dim_index, (i, dim, start, stop)) in multizip((point, dims, k_start, k_stop)).enumerate() {
         let step = (stop - start) / (*dim as f64);
         k[dim_index] = start + (*i as f64) * step;
@@ -50,7 +54,7 @@ pub struct EvecCache<M: Model> {
     k_start: [f64; 3],
     k_stop: [f64; 3],
     energy: Vec<Vec<f64>>,
-    evec: Vec<Matrix<Complex64>>,
+    evec: Vec<Array2<Complex64>>,
 }
 
 impl<M: Model> EvecCache<M> {
@@ -79,7 +83,7 @@ impl<M: Model> EvecCache<M> {
                     let k = grid_k(&[i0, i1, i2], &dims, &k_start, &k_stop);
 
                     let hk = hk_lat(&m, &k);
-                    
+
                     // TODO have to use something other than rulinalg:
                     // eigendecomp() documentation says:
                     // "The eigenvectors are only gauranteed to be correct if the matrix is
@@ -87,7 +91,7 @@ impl<M: Model> EvecCache<M> {
                     // eigendecomp() is not even implemented for non-float elements.
                     //let (es, u) = hk.eigendecomp().unwrap();
                     let es = Vec::new();
-                    let u = Matrix::<Complex64>::zeros(m.bands(), m.bands());
+                    let u = Array2::<Complex64>::zeros((m.bands(), m.bands()));
 
                     energy.push(es);
                     evec.push(u);
@@ -95,7 +99,14 @@ impl<M: Model> EvecCache<M> {
             }
         }
 
-        EvecCache { m, dims, k_start, k_stop, energy, evec }
+        EvecCache {
+            m,
+            dims,
+            k_start,
+            k_stop,
+            energy,
+            evec,
+        }
     }
 }
 
@@ -110,7 +121,7 @@ impl<M: Model> EnergyGrid for EvecCache<M> {
 }
 
 impl<M: Model> EvecGrid for EvecCache<M> {
-    fn evec(&self, grid_index: usize) -> &Matrix<Complex64> {
+    fn evec(&self, grid_index: usize) -> &Array2<Complex64> {
         &self.evec[grid_index]
     }
 }

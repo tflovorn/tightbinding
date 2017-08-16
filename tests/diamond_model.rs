@@ -1,9 +1,9 @@
 extern crate num_complex;
-extern crate rulinalg;
+extern crate ndarray;
 extern crate tightbinding;
 
 use num_complex::Complex64;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 use tightbinding::float::{is_near_float, is_near_complex};
 use tightbinding::Model;
 use tightbinding::units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};
@@ -70,11 +70,11 @@ fn diamond_model() {
     check_hrs(&m, expected_rs, expected_indexes, expected_vals);
 }
 
-fn check_d(d: &Matrix<f64>, expected_d_data: Vec<f64>) {
+fn check_d(d: &Array2<f64>, expected_d_data: Vec<f64>) {
     let eps_abs = 1e-12; // Angstrom
     let eps_rel = 1e-12;
 
-    for (&x, &y) in expected_d_data.iter().zip(d.data()) {
+    for (&x, &y) in expected_d_data.iter().zip(d.as_slice().unwrap()) {
         assert!(is_near_float(x, y, eps_abs, eps_rel));
     }
 }

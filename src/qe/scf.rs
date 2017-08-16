@@ -2,7 +2,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io;
 use std::io::Read;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 use sxd_document::parser::parse;
 use sxd_document::dom::Document;
 use sxd_xpath::evaluate_xpath;
@@ -12,7 +12,7 @@ use units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};
 pub struct Scf {
     /// A matrix with columns giving the lattice vectors in Cartesian
     /// coordinates in units of Angstroms.
-    pub d: Matrix<f64>,
+    pub d: Array2<f64>,
     /// The Fermi energy in units of eV.
     pub fermi: f64,
     /// The lattice parameter (in Bohr) used by Quantum Espresso for units of some
@@ -50,13 +50,13 @@ impl Scf {
     }
 }
 
-fn extract_d_bohr(doc: &Document) -> Matrix<f64> {
+fn extract_d_bohr(doc: &Document) -> Array2<f64> {
     let base = "/Root/CELL/DIRECT_LATTICE_VECTORS";
     let units_path = format!("{}/UNITS_FOR_DIRECT_LATTICE_VECTORS/@UNITS", base);
     let units = evaluate_xpath(doc, &units_path).unwrap().into_string();
     assert_eq!(units, "Bohr");
 
-    let mut d = Matrix::zeros(3, 3);
+    let mut d = Array2::zeros((3, 3));
 
     for i in 0..3 {
         let a_path = format!("{}/a{}", base, i + 1);

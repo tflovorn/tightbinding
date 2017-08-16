@@ -5,7 +5,8 @@ authors = ["Tim Lovorn <tflovorn@austin.utexas.edu>"]
 
 [dependencies]
 num-complex = "0.1.40"
-rulinalg = "0.4.2"
+ndarray = "0.10.3"
+linxal = "0.6.0"
 sxd-document = "0.2.4"
 sxd-xpath = "0.4.1"
 itertools = "0.6.1"

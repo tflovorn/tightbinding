@@ -1,11 +1,11 @@
 extern crate num_complex;
-extern crate rulinalg;
+extern crate ndarray;
 extern crate tightbinding;
 
 use std::f64::consts::PI;
 use std::collections::HashMap;
 use num_complex::Complex64;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 use tightbinding::float::is_near_complex;
 use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
@@ -15,8 +15,8 @@ use tightbinding::fourier::hk_cart;
 /// Has the spectrum
 ///     \epsilon(k) = -2 * t * (cos(k_x a) + cos(k_y a) + cos(k_z a))
 struct CubicNNModel {
-    hrs: HashMap<[i32; 3], Matrix<Complex64>>,
-    d: Matrix<f64>,
+    hrs: HashMap<[i32; 3], Array2<Complex64>>,
+    d: Array2<f64>,
 }
 
 impl CubicNNModel {
@@ -25,21 +25,21 @@ impl CubicNNModel {
 
         let mt = Complex64::new(-t, 0.0);
 
-        hrs.insert([1, 0, 0], Matrix::identity(1) * mt);
-        hrs.insert([-1, 0, 0], Matrix::identity(1) * mt);
-        hrs.insert([0, 1, 0], Matrix::identity(1) * mt);
-        hrs.insert([0, -1, 0], Matrix::identity(1) * mt);
-        hrs.insert([0, 0, 1], Matrix::identity(1) * mt);
-        hrs.insert([0, 0, -1], Matrix::identity(1) * mt);
+        hrs.insert([1, 0, 0], Array2::eye(1) * mt);
+        hrs.insert([-1, 0, 0], Array2::eye(1) * mt);
+        hrs.insert([0, 1, 0], Array2::eye(1) * mt);
+        hrs.insert([0, -1, 0], Array2::eye(1) * mt);
+        hrs.insert([0, 0, 1], Array2::eye(1) * mt);
+        hrs.insert([0, 0, -1], Array2::eye(1) * mt);
 
-        let d = Matrix::identity(1) * a;
+        let d = Array2::eye(1) * a;
 
         CubicNNModel { hrs, d }
     }
 }
 
 impl Model for CubicNNModel {
-    fn hrs(&self) -> &HashMap<[i32; 3], Matrix<Complex64>> {
+    fn hrs(&self) -> &HashMap<[i32; 3], Array2<Complex64>> {
         &self.hrs
     }
 
@@ -47,7 +47,7 @@ impl Model for CubicNNModel {
         1
     }
 
-    fn d(&self) -> &Matrix<f64> {
+    fn d(&self) -> &Array2<f64> {
         &self.d
     }
 }

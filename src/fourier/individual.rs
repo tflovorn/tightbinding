@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 use num_complex::Complex64;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 
 use model::Model;
 
@@ -10,8 +10,8 @@ use model::Model;
 /// # Arguments
 ///
 /// * `k_lat` - k in lattice coordinates
-pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64]) -> Matrix<Complex64> {
-    let mut hk = Matrix::<Complex64>::zeros(m.bands(), m.bands());
+pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64]) -> Array2<Complex64> {
+    let mut hk = Array2::<Complex64>::zeros((m.bands(), m.bands()));
 
     for (r_lat, hr) in m.hrs() {
         let k_dot_r = 2.0 * PI *
@@ -22,7 +22,7 @@ pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64]) -> Matrix<Complex64> {
                 .sum::<f64>();
 
         let coeff = Complex64::new(0.0, k_dot_r).exp();
-        hk += hr * coeff;
+        hk = hk + hr * coeff;
     }
 
     hk
@@ -35,10 +35,10 @@ pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64]) -> Matrix<Complex64> {
 ///
 /// * `k_cart` - k in Cartesian coordinates. The units of k_cart entries
 /// are the inverse of the units of m.D entries.
-pub fn hk_cart<M: Model>(m: &M, k_cart: &[f64]) -> Matrix<Complex64> {
-    let k_cart_mat = Matrix::<f64>::new(1, 3, k_cart);
-    let k_lat_mat = m.d() * k_cart_mat * (1.0 / (2.0 * PI));
-    let k_lat = k_lat_mat.data();
+pub fn hk_cart<M: Model>(m: &M, k_cart: &[f64]) -> Array2<Complex64> {
+    let k_cart_mat = Array2::<f64>::from_shape_vec((1, 3), k_cart.to_vec()).unwrap();
+    let k_lat_mat = (1.0 / (2.0 * PI)) * m.d().dot(&k_cart_mat);
+    let k_lat = k_lat_mat.as_slice().unwrap();
 
     hk_lat(m, &k_lat[..])
 }

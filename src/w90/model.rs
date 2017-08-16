@@ -5,19 +5,19 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 use num_complex::Complex64;
-use rulinalg::matrix::Matrix;
+use ndarray::Array2;
 
 use model::Model;
 
 #[derive(Clone)]
 pub struct W90Model {
-    hrs: HashMap<[i32; 3], Matrix<Complex64>>,
+    hrs: HashMap<[i32; 3], Array2<Complex64>>,
     bands: usize,
-    d: Matrix<f64>,
+    d: Array2<f64>,
 }
 
 impl W90Model {
-    pub fn new<P: AsRef<Path>>(hr_path: P, d: Matrix<f64>) -> Result<W90Model, io::Error> {
+    pub fn new<P: AsRef<Path>>(hr_path: P, d: Array2<f64>) -> Result<W90Model, io::Error> {
         let mut contents = String::new();
 
         {
@@ -44,7 +44,7 @@ impl W90Model {
 impl Model for W90Model {
     /// A collection of (displacement vector, hopping matrix) pairs, (R, H(R)).
     /// H(R) matrix elements are given in units of eV.
-    fn hrs(&self) -> &HashMap<[i32; 3], Matrix<Complex64>> {
+    fn hrs(&self) -> &HashMap<[i32; 3], Array2<Complex64>> {
         &self.hrs
     }
 
@@ -56,7 +56,7 @@ impl Model for W90Model {
 
     /// A matrix with columns giving the lattice vectors in Cartesian
     /// coordinates in units of Angstroms.
-    fn d(&self) -> &Matrix<f64> {
+    fn d(&self) -> &Array2<f64> {
         &self.d
     }
 }
@@ -127,12 +127,12 @@ fn extract_hr_header(contents: &str) -> HrHeader {
 /// * `contents` - the contents of the hr.dat file
 /// * `header` - information in the header of the hr.dat file, obtained from
 /// extract_hr_header().
-fn extract_hr_model(contents: &str, header: &HrHeader) -> HashMap<[i32; 3], Matrix<Complex64>> {
+fn extract_hr_model(contents: &str, header: &HrHeader) -> HashMap<[i32; 3], Array2<Complex64>> {
     let mut lines = contents.lines().skip(header.start_hr);
     let mut hrs = HashMap::new();
 
     for r_index in 0..header.rs {
-        let mut hrs_entry = Matrix::<Complex64>::zeros(header.bands, header.bands);
+        let mut hrs_entry = Array2::<Complex64>::zeros((header.bands, header.bands));
         let mut r = [0, 0, 0];
 
         for i in 0..header.bands {
