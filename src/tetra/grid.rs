@@ -18,6 +18,12 @@ pub trait EnergyGrid {
     /// the final point, at dims[i], is equivalent to the first point,
     /// at 0, when the grid covers the full Brillouin zone.
     fn dims(&self) -> [usize; 3];
+
+    /// Volume of a tetrahedron as a fraction of the Brillouin zone volume.
+    ///
+    /// When the grid covers the full Brillouin zone, this is
+    /// (1 / number of tetrahedra) = (1 / (dims[0] * dims[1] * dims[2])).
+    fn tetra_volume(&self) -> f64;
 }
 
 /// Converts discrete k-point grid coordinates to associated eigenvectors.
@@ -114,6 +120,13 @@ impl<M: Model> EnergyGrid for EvecCache<M> {
 
     fn dims(&self) -> [usize; 3] {
         self.dims
+    }
+
+    fn tetra_volume(&self) -> f64 {
+        let k_volume: f64 = self.k_start.iter().zip(&self.k_stop).map(|(start, stop)| stop - start).product();
+        let num_tetra: f64 = self.dims.iter().map(|x| *x as f64).sum();
+
+        1.0 / (k_volume * num_tetra)
     }
 }
 
