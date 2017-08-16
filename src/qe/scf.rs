@@ -20,13 +20,13 @@ pub struct Scf {
     pub alat: f64,
 }
 
-/// Extract relevant data describing a DFT calculation and its results from
-/// the file `data-file.xml` produced by Quantum Espresso.
-///
-/// # Arguments
-/// * `scf_path` - path to the SCF data-file.xml file, produced by Quantum
-/// Espresso as (prefix)/data-file.xml during the SCF calculation.
 impl Scf {
+    /// Extract relevant data describing a DFT calculation and its results from
+    /// the file `data-file.xml` produced by Quantum Espresso.
+    ///
+    /// # Arguments
+    /// * `scf_path` - path to the SCF data-file.xml file, produced by Quantum
+    /// Espresso as (prefix)/data-file.xml during the SCF calculation.
     pub fn new<P: AsRef<Path>>(scf_path: P) -> Result<Scf, io::Error> {
         let mut contents = String::new();
 
