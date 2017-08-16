@@ -4,6 +4,7 @@ extern crate sxd_document;
 extern crate sxd_xpath;
 
 pub mod float;
+pub mod vec_util;
 pub mod units;
 
 mod model;
