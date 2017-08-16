@@ -15,10 +15,13 @@ pub struct Scf {
     pub d: Matrix<f64>,
     /// The Fermi energy in units of eV.
     pub fermi: f64,
+    /// The lattice parameter (in Bohr) used by Quantum Espresso for units of some
+    /// quantities.
+    pub alat: f64,
 }
 
 /// Extract relevant data describing a DFT calculation and its results from
-/// the file data-file.xml produced by Quantum Espresso.
+/// the file `data-file.xml` produced by Quantum Espresso.
 ///
 /// # Arguments
 /// * `scf_path` - path to the SCF data-file.xml file, produced by Quantum
@@ -41,7 +44,9 @@ impl Scf {
 
         let fermi = extract_fermi_hartree(&doc) * EV_PER_HARTREE;
 
-        Ok(Scf { d, fermi })
+        let alat = extract_alat_bohr(&doc);
+
+        Ok(Scf { d, fermi, alat })
     }
 }
 
@@ -81,4 +86,16 @@ fn extract_fermi_hartree(doc: &Document) -> f64 {
     let fermi = fermi_text.trim().parse().unwrap();
 
     fermi
+}
+
+fn extract_alat_bohr(doc: &Document) -> f64 {
+    let alat_path = "/Root/CELL/LATTICE_PARAMETER";
+    let units_path = format!("{}/@UNITS", alat_path);
+    let units = evaluate_xpath(doc, &units_path).unwrap().into_string();
+    assert_eq!(units, "Bohr");
+
+    let alat_text = evaluate_xpath(doc, alat_path).unwrap().into_string();
+    let alat = alat_text.trim().parse().unwrap();
+
+    alat
 }

@@ -34,6 +34,16 @@ fn diamond_model() {
         eps_rel_fermi,
     ));
 
+    let expected_alat = 6.1;
+    let eps_abs_alat = 1e-12; // Bohr
+    let eps_rel_alat = 1e-12;
+    assert!(is_near_float(
+        expected_alat,
+        scf_data.alat,
+        eps_abs_alat,
+        eps_rel_alat,
+    ));
+
     let m = W90Model::new(hr_path, d).unwrap();
 
     assert_eq!(m.bands(), 4);
