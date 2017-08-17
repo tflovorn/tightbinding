@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use num_complex::Complex64;
 
 pub fn is_near_float(x: f64, y: f64, eps_abs: f64, eps_rel: f64) -> bool {
@@ -18,4 +19,29 @@ pub fn is_near_complex(x: Complex64, y: Complex64, eps_abs: f64, eps_rel: f64) -
     }
 
     diff < eps_rel * x.norm().max(y.norm())
+}
+
+/// Floating point number which panics if compared to a NaN.
+/// Implementation taken from:
+/// https://stackoverflow.com/questions/28247990/
+/// how-to-do-a-binary-search-on-a-vec-of-floats/28248065#28248065
+#[derive(PartialEq, PartialOrd)]
+pub struct NonNan(f64);
+
+impl NonNan {
+    pub fn new(val: f64) -> Option<NonNan> {
+        if val.is_nan() {
+            None
+        } else {
+            Some(NonNan(val))
+        }
+    }
+}
+
+impl Eq for NonNan {}
+
+impl Ord for NonNan {
+    fn cmp(&self, other: &NonNan) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
 }

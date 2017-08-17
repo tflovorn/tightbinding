@@ -12,6 +12,9 @@ pub trait EnergyGrid {
     /// Band energies associated with the k-point at grid_index.
     fn energy(&self, grid_index: usize) -> &Vec<f64>;
 
+    /// Number of bands at each k-point.
+    fn bands(&self) -> usize;
+
     /// Dimensions of the grid along [k1, k2, k3] directions.
     ///
     /// The full grid ranges in 0..dims[i]+1 in each direction;
@@ -36,10 +39,13 @@ pub trait EvecGrid: EnergyGrid {
 /// Compute the linearized grid index associated with the given k-point index.
 ///
 /// TODO - would passing copy of point, dims be more efficient?
+///
+/// TODO - prefer to move this to default impl in EnergyGrid?
 pub fn grid_index(point: &[usize; 3], dims: &[usize; 3]) -> usize {
     point[0] + (dims[0] + 1) * (point[1] + point[2] * (dims[1] + 1))
 }
 
+/// Convert the grid point to the corresponding k-point.
 pub fn grid_k(
     point: &[usize; 3],
     dims: &[usize; 3],
@@ -56,6 +62,9 @@ pub fn grid_k(
     k
 }
 
+/// Cache storing the eigenvalues and eigenvectors of the model `m` computed
+/// on the k-point grid bounded by `k_start` and `k_stop` and with number of
+/// k-points in each direction given by `dims`.
 pub struct EvecCache<M: Model> {
     m: M,
     dims: [usize; 3],
@@ -118,12 +127,20 @@ impl<M: Model> EnergyGrid for EvecCache<M> {
         &self.energy[grid_index]
     }
 
+    fn bands(&self) -> usize {
+        self.m.bands()
+    }
+
     fn dims(&self) -> [usize; 3] {
         self.dims
     }
 
     fn tetra_volume(&self) -> f64 {
-        let k_volume: f64 = self.k_start.iter().zip(&self.k_stop).map(|(start, stop)| stop - start).product();
+        let k_volume: f64 = self.k_start
+            .iter()
+            .zip(&self.k_stop)
+            .map(|(start, stop)| stop - start)
+            .product();
         let num_tetra: f64 = self.dims.iter().map(|x| *x as f64).sum();
 
         1.0 / (k_volume * num_tetra)

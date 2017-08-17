@@ -87,9 +87,17 @@ fn cubic_nn() {
             for i2 in 0..dims[2] + 1 {
                 let point = [i0, i1, i2];
                 let index = grid_index(&point, &dims);
-                let k_cart = grid_k(&point, &dims, &k_start, &k_stop).iter().map(|ki| (2.0 * PI / a) * ki).collect::<Vec<f64>>();
+                let k_cart = grid_k(&point, &dims, &k_start, &k_stop)
+                    .iter()
+                    .map(|ki| (2.0 * PI / a) * ki)
+                    .collect::<Vec<f64>>();
 
-                assert!(is_near_float(cache.energy(index)[0], CubicNNModel::epsilon(t, a, &k_cart), eps_abs, eps_rel))
+                assert!(is_near_float(
+                    cache.energy(index)[0],
+                    CubicNNModel::epsilon(t, a, &k_cart),
+                    eps_abs,
+                    eps_rel,
+                ))
             }
         }
     }
