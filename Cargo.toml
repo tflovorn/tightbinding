@@ -11,11 +11,16 @@ sxd-xpath = "0.4.1"
 itertools = "0.6.1"
 clap = "2.26.0"
 serde_json = "1.0"
+pre-commit = "0.5.2"
 
 [dependencies.linxal]
 version = "0.6.0"
 default-features = false
 features = ["netlib"]
+
+[package.metadata.precommit]
+fmt = "cargo fmt -- --write-mode diff 2>&1"
+test = "cargo test 2>&1"
 
 [[bin]]
 name = "tb_w90_dos"
