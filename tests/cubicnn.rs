@@ -110,7 +110,7 @@ fn cubic_nn() {
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 
     let num_energies = 10;
-    let dos = dos_from_num(&m, num_energies, dims, k_start, k_stop);
+    let (_, dos) = dos_from_num(&m, num_energies, dims, k_start, k_stop);
     let expected_dos = vec![0.004629629629629627, 0.032407407407407385, 0.08796296296296292, 0.1574074074074073, 0.18518518518518526, 0.1574074074074076, 0.08796296296296294, 0.03240740740740737, 0.0046296296296296485];
 
     let eps_abs_dos = 1e-12 / t;

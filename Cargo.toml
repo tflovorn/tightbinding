@@ -9,8 +9,14 @@ ndarray = "0.9.1"
 sxd-document = "0.2.4"
 sxd-xpath = "0.4.1"
 itertools = "0.6.1"
+clap = "2.26.0"
+serde_json = "1.0"
 
 [dependencies.linxal]
 version = "0.6.0"
 default-features = false
 features = ["netlib"]
+
+[[bin]]
+name = "tb_w90_dos"
+path = "src/bin/tb_w90_dos.rs"

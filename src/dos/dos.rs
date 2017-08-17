@@ -4,7 +4,7 @@ use vec_util::transpose_vecs;
 use model::Model;
 use tetra::{EvecCache, EnergyGrid, all_weights, orbital_number};
 
-pub fn dos_from_num<M: Model>(m: &M, num_energies: usize, dims: [usize; 3], k_start: [f64; 3], k_stop: [f64; 3]) -> Vec<Vec<f64>> {
+pub fn dos_from_num<M: Model>(m: &M, num_energies: usize, dims: [usize; 3], k_start: [f64; 3], k_stop: [f64; 3]) -> (Vec<f64>, Vec<Vec<f64>>) {
     let cache = EvecCache::new(m.clone(), dims, k_start, k_stop);
     let (min_e, max_e) = cache.energy_bounds();
 
@@ -32,5 +32,5 @@ pub fn dos_from_num<M: Model>(m: &M, num_energies: usize, dims: [usize; 3], k_st
         orbital_dos.push(dos);
     }
 
-    orbital_dos
+    (es.as_slice().unwrap()[1..num_energies].to_vec(), orbital_dos)
 }
