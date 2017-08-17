@@ -78,8 +78,6 @@ fn main() {
 
     let (es, dos) = dos_from_num(&model, num_energies, dims, k_start, k_stop);
 
-    // TODO plot band-resolved dos with groupings.
-    // For now, plot total dos.
     let mut total_dos = vec![0.0; es.len()];
     for band_dos in dos.iter() {
         for (e_index, e_dos) in band_dos.iter().enumerate() {
@@ -89,7 +87,8 @@ fn main() {
 
     let json_out = json!({
         "es": es,
-        "total_dos": total_dos
+        "total_dos": total_dos,
+        "orbital_dos": dos
     });
 
     let out_path = format!("{}_dos.json", prefix);
