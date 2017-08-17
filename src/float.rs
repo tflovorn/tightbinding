@@ -25,7 +25,7 @@ pub fn is_near_complex(x: Complex64, y: Complex64, eps_abs: f64, eps_rel: f64) -
 /// Implementation taken from:
 /// https://stackoverflow.com/questions/28247990/
 /// how-to-do-a-binary-search-on-a-vec-of-floats/28248065#28248065
-#[derive(PartialEq, PartialOrd)]
+#[derive(PartialEq, PartialOrd, Copy, Clone)]
 pub struct NonNan(f64);
 
 impl NonNan {
@@ -35,6 +35,10 @@ impl NonNan {
         } else {
             Some(NonNan(val))
         }
+    }
+
+    pub fn val(&self) -> f64 {
+        self.0
     }
 }
 

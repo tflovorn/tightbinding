@@ -1,9 +1,11 @@
+use std::f64;
 use num_complex::Complex64;
 use ndarray::Array2;
 use linxal::eigenvalues::SymEigen;
 use linxal::types::Symmetric;
 use itertools::multizip;
 
+use float::NonNan;
 use model::Model;
 use fourier::hk_lat;
 
@@ -11,6 +13,26 @@ use fourier::hk_lat;
 pub trait EnergyGrid {
     /// Band energies associated with the k-point at grid_index.
     fn energy(&self, grid_index: usize) -> &Vec<f64>;
+
+    /// Largest and smallest energy values contained in the grid.
+    fn energy_bounds(&self) -> (f64, f64) {
+        let mut min = NonNan::new(f64::MAX).unwrap();
+        let mut max = NonNan::new(f64::MIN).unwrap();
+
+        for grid_index in 0..self.end_grid_index() {
+            for e_f64 in self.energy(grid_index) {
+                let e = NonNan::new(*e_f64).unwrap();
+                if e < min {
+                    min = e;
+                }
+                if e > max {
+                    max = e;
+                }
+            }
+        }
+
+        (min.val(), max.val())
+    }
 
     /// Number of bands at each k-point.
     fn bands(&self) -> usize;
@@ -21,6 +43,11 @@ pub trait EnergyGrid {
     /// the final point, at dims[i], is equivalent to the first point,
     /// at 0, when the grid covers the full Brillouin zone.
     fn dims(&self) -> [usize; 3];
+
+    /// End of the range for grid_index: takes values in range 0..end_grid_index().
+    fn end_grid_index(&self) -> usize {
+        grid_index(&self.dims(), &self.dims()) + 1
+    }
 
     /// Volume of a tetrahedron as a fraction of the Brillouin zone volume.
     ///
@@ -141,9 +168,9 @@ impl<M: Model> EnergyGrid for EvecCache<M> {
             .zip(&self.k_stop)
             .map(|(start, stop)| stop - start)
             .product();
-        let num_tetra: f64 = self.dims.iter().map(|x| *x as f64).sum();
+        let num_tetra = 6.0 * self.dims.iter().map(|x| *x as f64).product::<f64>();
 
-        1.0 / (k_volume * num_tetra)
+        k_volume / num_tetra
     }
 }
 

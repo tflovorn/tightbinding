@@ -10,6 +10,7 @@ use tightbinding::float::{is_near_complex, is_near_float};
 use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
 use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
+use tightbinding::tetra::find_fermi;
 
 /// One-band tight-binding model on the cubic lattice with uniform
 /// nearest-neighbor hopping.
@@ -101,4 +102,10 @@ fn cubic_nn() {
             }
         }
     }
+
+    let mid_energy = 0.0;
+    let mid_occupation = 0.5;
+    let fermi_mid = find_fermi(&cache, mid_occupation);
+    println!("fermi {:?}", fermi_mid);
+    assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 }

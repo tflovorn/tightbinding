@@ -11,9 +11,9 @@ pub fn all_weights<G: EnergyGrid>(grid: &G, fermi: f64) -> Vec<Vec<f64>> {
     let mut weights_kn = Vec::new();
     let dims = grid.dims();
 
-    for i0 in 0..dims[0] {
-        for i1 in 0..dims[1] {
-            for i2 in 0..dims[2] {
+    for i0 in 0..dims[0] + 1 {
+        for i1 in 0..dims[1] + 1 {
+            for i2 in 0..dims[2] + 1 {
                 let point = [i0, i1, i2];
 
                 weights_kn.push(band_weights(grid, fermi, &point));
@@ -63,7 +63,7 @@ pub fn band_weights<G: EnergyGrid>(grid: &G, fermi: f64, point: &[usize; 3]) -> 
 
                 let sorted_es = sorted_es_vs.iter().map(|&(e, _)| e).collect();
                 let sorted_vs = sorted_es_vs.iter().map(|&(_, v)| v).collect();
-
+                
                 // Get the weight contribution for each vertex.
                 let tetra_weights = weight_contrib(grid, fermi, &sorted_es);
 
@@ -246,6 +246,6 @@ fn curvature_correction<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &Vec<f64
 
     sorted_es
         .iter()
-        .map(|e| (dos_tetra / 40.0) * (sum_es - e))
+        .map(|e| (dos_tetra / 40.0) * (sum_es - 4.0 * e))
         .collect()
 }
