@@ -63,7 +63,7 @@ pub fn band_weights<G: EnergyGrid>(grid: &G, fermi: f64, point: &[usize; 3]) -> 
 
                 let sorted_es = sorted_es_vs.iter().map(|&(e, _)| e).collect();
                 let sorted_vs = sorted_es_vs.iter().map(|&(_, v)| v).collect();
-                
+
                 // Get the weight contribution for each vertex.
                 let tetra_weights = weight_contrib(grid, fermi, &sorted_es);
 

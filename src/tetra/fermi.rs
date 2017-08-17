@@ -12,26 +12,29 @@ pub fn find_fermi<G: EnergyGrid>(grid: &G, occupation: f64) -> f64 {
     };
 
     let eps_abs = 1e-12; // occupation has scale ~ 1.
-    bisect(occupation_error, e_min, e_max, eps_abs).expect("min and max energy do not bracket Fermi energy")
+    bisect(occupation_error, e_min, e_max, eps_abs).expect(
+        "min and max energy do not bracket Fermi energy",
+    )
 }
 
 fn bisect<F>(f: F, a: f64, b: f64, eps_abs: f64) -> Option<f64>
-    where F: Fn(f64) -> f64
+where
+    F: Fn(f64) -> f64,
 {
     let f_a = f(a);
     let f_b = f(b);
 
     // Is root on one of the endpoints?
     if f_a.abs() < eps_abs {
-        return Some(a)
+        return Some(a);
     } else if f_b.abs() < eps_abs {
-        return Some(b)
+        return Some(b);
     }
 
     // Do the endpoints bracket a root?
     // If not, no root is present.
     if (f_a < 0.0 && f_b < 0.0) || (f_a > 0.0 && f_b > 0.0) {
-        return None
+        return None;
     }
 
     // Root is somewhere between the endpoints. Find it by bisection.

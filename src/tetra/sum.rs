@@ -25,7 +25,11 @@ pub fn expectation_value(x_nk: &Vec<Vec<f64>>, weights: &Vec<Vec<f64>>) -> f64 {
 /// Calculate the orbital-resolved contributions to the expectation value of x.
 ///
 /// <x_i> = \sum_{nk} |U_{in}^k|^2 x_{nk} w_{nk}
-pub fn orbital_expectation_values<G: EvecGrid>(grid: &G, x_nk: &Vec<Vec<f64>>, weights: &Vec<Vec<f64>>) -> Vec<f64> {
+pub fn orbital_expectation_values<G: EvecGrid>(
+    grid: &G,
+    x_nk: &Vec<Vec<f64>>,
+    weights: &Vec<Vec<f64>>,
+) -> Vec<f64> {
     let mut evs = vec![0.0; grid.bands()];
 
     for (band_index, (x_ks, w_ks)) in x_nk.iter().zip(weights).enumerate() {
