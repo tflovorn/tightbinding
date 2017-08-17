@@ -17,3 +17,4 @@ pub mod qe;
 pub mod w90;
 
 pub mod tetra;
+pub mod dos;

@@ -11,6 +11,7 @@ use tightbinding::Model;
 use tightbinding::fourier::hk_cart;
 use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
 use tightbinding::tetra::find_fermi;
+use tightbinding::dos::dos_from_num;
 
 /// One-band tight-binding model on the cubic lattice with uniform
 /// nearest-neighbor hopping.
@@ -106,6 +107,16 @@ fn cubic_nn() {
     let mid_energy = 0.0;
     let mid_occupation = 0.5;
     let fermi_mid = find_fermi(&cache, mid_occupation);
-    println!("fermi {:?}", fermi_mid);
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
+
+    let num_energies = 10;
+    let dos = dos_from_num(&m, num_energies, dims, k_start, k_stop);
+    let expected_dos = vec![0.004629629629629627, 0.032407407407407385, 0.08796296296296292, 0.1574074074074073, 0.18518518518518526, 0.1574074074074076, 0.08796296296296294, 0.03240740740740737, 0.0046296296296296485];
+
+    let eps_abs_dos = 1e-12 / t;
+    let eps_rel_dos = 1e-12;
+
+    for (x, y) in dos[0].iter().zip(expected_dos) {
+        assert!(is_near_float(*x, y, eps_abs_dos, eps_rel_dos));
+    }
 }
