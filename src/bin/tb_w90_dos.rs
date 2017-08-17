@@ -48,17 +48,16 @@ fn main() {
     let work_base = env::var("TB_W90_WORK").expect(work_err_msg);
 
     let args = App::new("Plot DOS from Wannier90 tight-binding model")
-            .version("0.1.0")
-            .arg(Arg::with_name("subdir")
-                    .long("subdir")
-                    .takes_value(true))
-            .arg(Arg::with_name("num_energies")
-                    .long("num_energies")
-                    .takes_value(true)
-                    .default_value("1000"))
-            .arg(Arg::with_name("prefix")
-                    .index(1)
-                    .required(true)).get_matches();
+        .version("0.1.0")
+        .arg(Arg::with_name("subdir").long("subdir").takes_value(true))
+        .arg(
+            Arg::with_name("num_energies")
+                .long("num_energies")
+                .takes_value(true)
+                .default_value("1000"),
+        )
+        .arg(Arg::with_name("prefix").index(1).required(true))
+        .get_matches();
 
     let prefix = args.value_of("prefix").unwrap();
     let num_energies = args.value_of("num_energies").unwrap().parse().unwrap();
@@ -94,5 +93,7 @@ fn main() {
     let out_path = format!("{}_dos.json", prefix);
 
     let mut file = File::create(out_path).expect("Eror creating output file");
-    file.write_all(format!("{}", json_out).as_bytes()).expect("Error writing output file");
+    file.write_all(format!("{}", json_out).as_bytes()).expect(
+        "Error writing output file",
+    );
 }
