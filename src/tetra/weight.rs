@@ -1,6 +1,28 @@
 use float::NonNan;
+use vec_util::transpose_vecs;
 use tetra::grid::{EnergyGrid, grid_index};
 use tetra::dos::dos_contrib;
+
+/// Return a list with elements `w[band_index][grid_index]` which gives the
+/// weight w_{nk} of each (band, k-point) pair to the expectation value
+///
+/// <X_n> = \sum_k X_n(k) w_{nk}
+pub fn all_weights<G: EnergyGrid>(grid: &G, fermi: f64) -> Vec<Vec<f64>> {
+    let mut weights_kn = Vec::new();
+    let dims = grid.dims();
+
+    for i0 in 0..dims[0] {
+        for i1 in 0..dims[1] {
+            for i2 in 0..dims[2] {
+                let point = [i0, i1, i2];
+
+                weights_kn.push(band_weights(grid, fermi, &point));
+            }
+        }
+    }
+
+    transpose_vecs(&weights_kn)
+}
 
 /// Return a list of the weights w_{nk}, which give the contribution of each band
 /// at the given k-point to the expectation value
