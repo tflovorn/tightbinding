@@ -7,7 +7,11 @@ use tetra::dos::dos_contrib;
 /// weight w_{nk} of each (band, k-point) pair to the expectation value
 ///
 /// <X_n> = \sum_k X_n(k) w_{nk}
-pub fn all_weights<G: EnergyGrid>(grid: &G, fermi: f64) -> Vec<Vec<f64>> {
+pub fn all_weights<G: EnergyGrid>(
+    grid: &G,
+    fermi: f64,
+    use_curvature_correction: bool,
+) -> Vec<Vec<f64>> {
     let mut weights_kn = Vec::new();
     let dims = grid.dims();
 
@@ -16,7 +20,7 @@ pub fn all_weights<G: EnergyGrid>(grid: &G, fermi: f64) -> Vec<Vec<f64>> {
             for i2 in 0..dims[2] + 1 {
                 let point = [i0, i1, i2];
 
-                weights_kn.push(band_weights(grid, fermi, &point));
+                weights_kn.push(band_weights(grid, fermi, use_curvature_correction, &point));
             }
         }
     }
@@ -28,7 +32,12 @@ pub fn all_weights<G: EnergyGrid>(grid: &G, fermi: f64) -> Vec<Vec<f64>> {
 /// at the given k-point to the expectation value
 ///
 /// <X_n> = \sum_k X_n(k) w_{nk}
-pub fn band_weights<G: EnergyGrid>(grid: &G, fermi: f64, point: &[usize; 3]) -> Vec<f64> {
+pub fn band_weights<G: EnergyGrid>(
+    grid: &G,
+    fermi: f64,
+    use_curvature_correction: bool,
+    point: &[usize; 3],
+) -> Vec<f64> {
     let (tetra_indices, vertex_diffs) = tetra_indices();
     let neighbors = subcell_neighbors(point, &grid.dims());
 
@@ -65,7 +74,8 @@ pub fn band_weights<G: EnergyGrid>(grid: &G, fermi: f64, point: &[usize; 3]) -> 
                 let sorted_vs = sorted_es_vs.iter().map(|&(_, v)| v).collect();
 
                 // Get the weight contribution for each vertex.
-                let tetra_weights = weight_contrib(grid, fermi, &sorted_es);
+                let tetra_weights =
+                    weight_contrib(grid, fermi, use_curvature_correction, &sorted_es);
 
                 // Add the weight contribution from the vertex `point` to the total.
                 // TODO - for very dense grid, Kahan summation may be useful.
@@ -193,7 +203,12 @@ fn find_point_index(sorted_vs: &Vec<&[usize; 3]>, point: &[usize; 3]) -> Option<
 
 /// Return the weight contributions of the tetrahedron vertices with energies given
 /// by `sorted_es`.
-fn weight_contrib<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &Vec<f64>) -> Vec<f64> {
+fn weight_contrib<G: EnergyGrid>(
+    grid: &G,
+    fermi: f64,
+    use_curvature_correction: bool,
+    sorted_es: &Vec<f64>,
+) -> Vec<f64> {
     let fac = grid.tetra_volume() / 4.0;
     let (e1, e2, e3, e4) = (sorted_es[0], sorted_es[1], sorted_es[2], sorted_es[3]);
     let mut ws = [0.0; 4];
@@ -235,9 +250,13 @@ fn weight_contrib<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &Vec<f64>) -> 
         ws[3] = fac;
     }
 
-    let ccs = curvature_correction(grid, fermi, sorted_es);
+    if use_curvature_correction {
+        let ccs = curvature_correction(grid, fermi, sorted_es);
 
-    ws.iter().zip(ccs).map(|(w, cc)| w + cc).collect()
+        ws.iter().zip(ccs).map(|(w, cc)| w + cc).collect()
+    } else {
+        ws.to_vec()
+    }
 }
 
 fn curvature_correction<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &Vec<f64>) -> Vec<f64> {

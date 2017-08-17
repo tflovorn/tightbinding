@@ -4,9 +4,10 @@ use tetra::sum::total_number;
 
 pub fn find_fermi<G: EnergyGrid>(grid: &G, occupation: f64) -> f64 {
     let (e_min, e_max) = grid.energy_bounds();
+    let use_curvature_correction = false;
 
     let occupation_error = |fermi| {
-        let weights = all_weights(grid, fermi);
+        let weights = all_weights(grid, fermi, use_curvature_correction);
 
         total_number(&weights) - occupation
     };
