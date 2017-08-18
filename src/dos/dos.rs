@@ -30,19 +30,19 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
     // DOS(E_i) \approx (n(E_i) - n(E_{i - 1})) / (E_i - E_{i - 1})
     let mut orbital_dos = Vec::with_capacity(grid.bands());
     for num in orbital_nums.iter() {
-        let mut dos = Vec::with_capacity(num_energies - 1);
+        let mut dos = Vec::with_capacity(num_energies - 2);
 
         for (i, e_i) in es.iter().enumerate() {
-            if i == 0 {
+            if i == 0 || i == num_energies - 1 {
                 continue;
             }
             let delta: f64 = e_i - es[i - 1];
 
-            dos.push((num[i] - num[i - 1]) / delta);
+            dos.push(0.5 * (num[i + 1] - num[i - 1]) / delta);
         }
 
         orbital_dos.push(dos);
     }
 
-    (es[1..num_energies].to_vec(), orbital_dos)
+    (es[1..num_energies - 1].to_vec(), orbital_dos)
 }
