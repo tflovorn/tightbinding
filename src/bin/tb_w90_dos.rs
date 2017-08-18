@@ -69,8 +69,8 @@ fn main() {
     let scf_path = get_scf_path(&work, prefix);
     let hr_path = get_hr_path(&work, prefix);
 
-    let scf_data = Scf::new(scf_path).unwrap();
-    let model = W90Model::new(hr_path, scf_data.d).unwrap();
+    let scf_data = Scf::new(scf_path).expect("could not find scf output file");
+    let model = W90Model::new(hr_path, scf_data.d).expect("error constructing model");
 
     // TODO make dims a parameter.
     // Want to allow specifying k_start, k_stop?
