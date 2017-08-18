@@ -4,6 +4,7 @@ extern crate linxal;
 extern crate sxd_document;
 extern crate sxd_xpath;
 extern crate itertools;
+extern crate rayon;
 
 pub mod float;
 pub mod vec_util;

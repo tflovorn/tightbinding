@@ -2,4 +2,4 @@
 /target/
 **/*.rs.bk
 Cargo.lock
-*_dos.json
+*_dos.json*

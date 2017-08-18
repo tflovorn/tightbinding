@@ -2,8 +2,10 @@ use std::f64;
 use num_complex::Complex64;
 use ndarray::Array2;
 use linxal::eigenvalues::SymEigen;
+use linxal::eigenvalues::types::Solution;
 use linxal::types::Symmetric;
 use itertools::multizip;
+use rayon::prelude::*;
 
 use float::NonNan;
 use model::Model;
@@ -101,7 +103,7 @@ pub struct EvecCache<M: Model> {
     evec: Vec<Array2<Complex64>>,
 }
 
-impl<M: Model> EvecCache<M> {
+impl<M: Model + Sync> EvecCache<M> {
     /// Construct a new EvecCache from the given model, with the given number of k-points in
     /// each reciprocal lattice direction and occupying the given region of the Brillouin zone
     /// (to sample the full Brillouin zone, set k_start = [0.0, 0.0, 0.0] and
@@ -120,23 +122,32 @@ impl<M: Model> EvecCache<M> {
     ///
     /// TODO implement FFT calculation to compute all H(k) values at once.
     pub fn new(m: M, dims: [usize; 3], k_start: [f64; 3], k_stop: [f64; 3]) -> EvecCache<M> {
-        let mut energy = Vec::new();
-        let mut evec = Vec::new();
-
+        let mut points = Vec::new();
         for i0 in 0..dims[0] + 1 {
             for i1 in 0..dims[1] + 1 {
                 for i2 in 0..dims[2] + 1 {
-                    let k = grid_k(&[i0, i1, i2], &dims, &k_start, &k_stop);
-
-                    let hk = hk_lat(&m, &k);
-
-                    let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
-
-                    energy.push(solution.values.to_vec());
-                    evec.push(solution.right_vectors.unwrap());
+                    points.push([i0, i1, i2]);
                 }
             }
         }
+
+        let solutions: Vec<Solution<Complex64, f64>> = points
+            .par_iter()
+            .map(|point| {
+                let k = grid_k(point, &dims, &k_start, &k_stop);
+
+                let hk = hk_lat(&m, &k);
+
+                SymEigen::compute(&hk, Symmetric::Upper, true).unwrap()
+            })
+            .collect();
+
+        // TODO - how to extract these parts without clone?
+        let energy = solutions.iter().map(|s| s.values.to_vec()).collect();
+        let evec = solutions
+            .iter()
+            .map(|s| s.right_vectors.clone().unwrap())
+            .collect();
 
         EvecCache {
             m,

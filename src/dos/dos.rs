@@ -1,10 +1,11 @@
 use ndarray::Array1;
+use rayon::prelude::*;
 
 use vec_util::transpose_vecs;
 use model::Model;
 use tetra::{EvecCache, EnergyGrid, all_weights, orbital_number};
 
-pub fn dos_from_num<M: Model>(
+pub fn dos_from_num<M: Model + Sync>(
     m: &M,
     num_energies: usize,
     dims: [usize; 3],
@@ -14,15 +15,21 @@ pub fn dos_from_num<M: Model>(
     let cache = EvecCache::new(m.clone(), dims, k_start, k_stop);
     let (min_e, max_e) = cache.energy_bounds();
 
-    let es = Array1::linspace(min_e, max_e, num_energies);
+    let es = Array1::linspace(min_e, max_e, num_energies)
+        .as_slice()
+        .unwrap()
+        .to_vec();
     let use_curvature_correction = true;
 
-    let weights = es.iter()
+    let weights = es.par_iter()
         .map(|e| all_weights(&cache, *e, use_curvature_correction))
         .collect::<Vec<Vec<Vec<f64>>>>();
 
     let orbital_nums = transpose_vecs(
-        &(weights.iter().map(|w| orbital_number(&cache, w)).collect()),
+        &(weights
+              .par_iter()
+              .map(|w| orbital_number(&cache, w))
+              .collect()),
     );
 
     // DOS(E_i) \approx (n(E_i) - n(E_{i - 1})) / (E_i - E_{i - 1})
@@ -42,8 +49,5 @@ pub fn dos_from_num<M: Model>(
         orbital_dos.push(dos);
     }
 
-    (
-        es.as_slice().unwrap()[1..num_energies].to_vec(),
-        orbital_dos,
-    )
+    (es[1..num_energies].to_vec(), orbital_dos)
 }
