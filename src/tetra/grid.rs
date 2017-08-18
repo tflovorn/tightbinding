@@ -8,8 +8,6 @@ use itertools::multizip;
 use rayon::prelude::*;
 
 use float::NonNan;
-use model::Model;
-use fourier::hk_lat;
 
 /// Converts discrete k-point grid coordinates to associated energy values.
 pub trait EnergyGrid {
@@ -91,11 +89,11 @@ pub fn grid_k(
     k
 }
 
-/// Cache storing the eigenvalues and eigenvectors of the model `m` computed
+/// Cache storing the eigenvalues and eigenvectors of a model computed
 /// on the k-point grid bounded by `k_start` and `k_stop` and with number of
 /// k-points in each direction given by `dims`.
-pub struct EvecCache<M: Model> {
-    m: M,
+pub struct EvecCache {
+    bands: usize,
     dims: [usize; 3],
     k_start: [f64; 3],
     k_stop: [f64; 3],
@@ -103,7 +101,7 @@ pub struct EvecCache<M: Model> {
     evec: Vec<Array2<Complex64>>,
 }
 
-impl<M: Model + Sync> EvecCache<M> {
+impl EvecCache {
     /// Construct a new EvecCache from the given model, with the given number of k-points in
     /// each reciprocal lattice direction and occupying the given region of the Brillouin zone
     /// (to sample the full Brillouin zone, set k_start = [0.0, 0.0, 0.0] and
@@ -121,7 +119,14 @@ impl<M: Model + Sync> EvecCache<M> {
     /// would we be able to take advantage of symmetry operations if they were implemented?
     ///
     /// TODO implement FFT calculation to compute all H(k) values at once.
-    pub fn new(m: M, dims: [usize; 3], k_start: [f64; 3], k_stop: [f64; 3]) -> EvecCache<M> {
+    /// Can implement alternate new() function to construct EvecCache this way.
+    pub fn new<F: Sync + Fn([f64; 3]) -> Array2<Complex64>>(
+        hk_fn: F,
+        bands: usize,
+        dims: [usize; 3],
+        k_start: [f64; 3],
+        k_stop: [f64; 3],
+    ) -> EvecCache {
         let mut points = Vec::new();
         for i0 in 0..dims[0] + 1 {
             for i1 in 0..dims[1] + 1 {
@@ -136,7 +141,9 @@ impl<M: Model + Sync> EvecCache<M> {
             .map(|point| {
                 let k = grid_k(point, &dims, &k_start, &k_stop);
 
-                let hk = hk_lat(&m, &k);
+                let hk = hk_fn(k);
+                // TODO could return Err if this assertion fails instead of panicking.
+                assert!(hk.dim() == (bands, bands));
 
                 SymEigen::compute(&hk, Symmetric::Upper, true).unwrap()
             })
@@ -150,7 +157,7 @@ impl<M: Model + Sync> EvecCache<M> {
             .collect();
 
         EvecCache {
-            m,
+            bands,
             dims,
             k_start,
             k_stop,
@@ -160,13 +167,13 @@ impl<M: Model + Sync> EvecCache<M> {
     }
 }
 
-impl<M: Model> EnergyGrid for EvecCache<M> {
+impl EnergyGrid for EvecCache {
     fn energy(&self, grid_index: usize) -> &Vec<f64> {
         &self.energy[grid_index]
     }
 
     fn bands(&self) -> usize {
-        self.m.bands()
+        self.bands
     }
 
     fn dims(&self) -> [usize; 3] {
@@ -185,7 +192,7 @@ impl<M: Model> EnergyGrid for EvecCache<M> {
     }
 }
 
-impl<M: Model> EvecGrid for EvecCache<M> {
+impl EvecGrid for EvecCache {
     fn evec(&self, grid_index: usize) -> &Array2<Complex64> {
         &self.evec[grid_index]
     }

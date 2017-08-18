@@ -8,7 +8,7 @@ use num_complex::Complex64;
 use ndarray::Array2;
 use tightbinding::float::{is_near_complex, is_near_float};
 use tightbinding::Model;
-use tightbinding::fourier::hk_cart;
+use tightbinding::fourier::{hk_lat, hk_cart};
 use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
 use tightbinding::tetra::find_fermi;
 use tightbinding::dos::dos_from_num;
@@ -82,7 +82,9 @@ fn cubic_nn() {
     let k_start = [0.0, 0.0, 0.0];
     let k_stop = [1.0, 1.0, 1.0];
 
-    let cache = EvecCache::new(m.clone(), dims, k_start, k_stop);
+    let hk_fn = |k| hk_lat(&m, &k);
+
+    let cache = EvecCache::new(hk_fn, m.bands(), dims, k_start, k_stop);
 
     for i0 in 0..dims[0] + 1 {
         for i1 in 0..dims[1] + 1 {
@@ -110,7 +112,7 @@ fn cubic_nn() {
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 
     let num_energies = 10;
-    let (_, dos) = dos_from_num(&m, num_energies, dims, k_start, k_stop);
+    let (_, dos) = dos_from_num(&cache, num_energies);
     let expected_dos = vec![
         0.004629629629629627,
         0.032407407407407385,

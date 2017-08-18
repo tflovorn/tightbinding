@@ -8,8 +8,11 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::io::Write;
 use clap::{Arg, App};
+use tightbinding::Model;
 use tightbinding::w90::W90Model;
 use tightbinding::qe::Scf;
+use tightbinding::fourier::hk_lat;
+use tightbinding::tetra::EvecCache;
 use tightbinding::dos::dos_from_num;
 
 fn build_work(work_base: &str, subdir: Option<&str>, prefix: &str) -> PathBuf {
@@ -75,7 +78,10 @@ fn main() {
     let k_start = [0.0, 0.0, 0.0];
     let k_stop = [1.0, 1.0, 1.0];
 
-    let (es, dos) = dos_from_num(&model, num_energies, dims, k_start, k_stop);
+    let hk_fn = |k| hk_lat(&model, &k);
+
+    let cache = EvecCache::new(hk_fn, model.bands(), dims, k_start, k_stop);
+    let (es, dos) = dos_from_num(&cache, num_energies);
 
     let mut total_dos = vec![0.0; es.len()];
     for band_dos in dos.iter() {
