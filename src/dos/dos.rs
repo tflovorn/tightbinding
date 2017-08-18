@@ -16,14 +16,12 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         .to_vec();
     let use_curvature_correction = true;
 
-    let weights = es.par_iter()
-        .map(|e| all_weights(grid, *e, use_curvature_correction))
-        .collect::<Vec<Vec<Vec<f64>>>>();
-
     let orbital_nums = transpose_vecs(
-        &(weights
-              .par_iter()
-              .map(|w| orbital_number(grid, w))
+        &(es.par_iter()
+              .map(|e| {
+            let w = all_weights(grid, *e, use_curvature_correction);
+            orbital_number(grid, &w)
+        })
               .collect()),
     );
 
