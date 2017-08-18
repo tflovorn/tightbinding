@@ -37,7 +37,7 @@ pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64; 3]) -> Array2<Complex64> {
 /// are the inverse of the units of m.D entries.
 pub fn hk_cart<M: Model>(m: &M, k_cart: &[f64; 3]) -> Array2<Complex64> {
     let k_cart_mat = Array2::<f64>::from_shape_vec((1, 3), k_cart.to_vec()).unwrap();
-    let k_lat_mat = (1.0 / (2.0 * PI)) * m.d().dot(&k_cart_mat);
+    let k_lat_mat = (1.0 / (2.0 * PI)) * k_cart_mat.dot(m.d());
     let k_lat = k_lat_mat.as_slice().unwrap();
 
     hk_lat(m, &[k_lat[0], k_lat[1], k_lat[2]])

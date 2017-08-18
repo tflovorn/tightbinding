@@ -36,7 +36,7 @@ impl CubicNNModel {
         hrs.insert([0, 0, 1], Array2::eye(1) * mt);
         hrs.insert([0, 0, -1], Array2::eye(1) * mt);
 
-        let d = Array2::eye(1) * a;
+        let d = Array2::eye(3) * a;
 
         CubicNNModel { hrs, d }
     }
