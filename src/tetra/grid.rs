@@ -107,6 +107,8 @@ impl EvecCache {
     /// (to sample the full Brillouin zone, set k_start = [0.0, 0.0, 0.0] and
     /// k_stop = [1.0, 1.0, 1.0]).
     ///
+    /// TODO prefer to pass hk_fn as trait giving hk_lat()?
+    ///
     /// TODO convert k from original coordinates to coordinates with sign / order of G permuted to
     /// minimize tetrahedron length: "In order to minimize interpolation distances the shortest
     /// main diagonal is chosen." Ensure that k_start, k_stop are used correctly when this is done:
@@ -120,6 +122,23 @@ impl EvecCache {
     ///
     /// TODO implement FFT calculation to compute all H(k) values at once.
     /// Can implement alternate new() function to construct EvecCache this way.
+    ///
+    /// # Arguments
+    ///
+    /// * `hk_fn` - a function H(k_lat) giving the Hamiltonian at a particular
+    /// k which is given in lattice coordinates.
+    ///
+    /// * `bands` - the number of bands in H(k).
+    ///
+    /// * `dims` - the number of points to sample inside the Brillouin zone
+    /// along each (lattice coordinate) direction.
+    ///
+    /// * `k_start` - smallest value of k (in lattice coordinates) to sample
+    /// in each direction.
+    ///
+    /// * `k_start` - largest value of k (in lattice coordinates) to sample in
+    /// each direction. To sample the whole Brillouin zone, give
+    /// k_start = [0.0, 0.0, 0.0] and k_stop = [1.0, 1.0, 1.0].
     pub fn new<F: Sync + Fn([f64; 3]) -> Array2<Complex64>>(
         hk_fn: F,
         bands: usize,
