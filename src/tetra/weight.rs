@@ -43,7 +43,7 @@ pub fn band_weights<G: EnergyGrid>(
 
     let mut weights = vec![0.0; grid.bands()];
 
-    // Iterate over all subcells neighboring the subcell specified by `point`.
+    // Iterate over all subcells neighboring the point specified by `point`.
     for neighbor in neighbors {
         // Iterate over all tetrahedra in this subcell.
         for tetra in tetra_indices.iter() {
