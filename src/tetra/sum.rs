@@ -3,6 +3,9 @@ use tetra::grid::EvecGrid;
 /// Calculate the contribution of one band to the expectation value of x.
 ///
 /// <x_n> = \sum_k x_{nk} w_{nk}
+///
+/// TODO - may want to use Kahan sum here. For very large number of k-points,
+/// expect loss of precision.
 pub fn band_expectation_value(x_k: &Vec<f64>, band_weights: &Vec<f64>) -> f64 {
     x_k.iter()
         .zip(band_weights)
@@ -25,6 +28,9 @@ pub fn expectation_value(x_nk: &Vec<Vec<f64>>, weights: &Vec<Vec<f64>>) -> f64 {
 /// Calculate the orbital-resolved contributions to the expectation value of x.
 ///
 /// <x_i> = \sum_{nk} |U_{in}^k|^2 x_{nk} w_{nk}
+///
+/// TODO - may want to use Kahan sum here. For very large number of k-points,
+/// expect loss of precision.
 pub fn orbital_expectation_values<G: EvecGrid>(
     grid: &G,
     x_nk: &Vec<Vec<f64>>,

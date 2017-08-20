@@ -79,7 +79,6 @@ pub fn band_weights<G: EnergyGrid>(
                     weight_contrib(grid, fermi, use_curvature_correction, &sorted_es);
 
                 // Add the weight contribution from the vertex `point` to the total.
-                // TODO - for very dense grid, Kahan summation may be useful.
                 let point_index = find_point_index(&sorted_vs, &point).unwrap();
                 weights[band_index] += tetra_weights[point_index];
             }
@@ -94,8 +93,8 @@ pub fn band_weights<G: EnergyGrid>(
 /// Each cubic subcell is divided into six tetrahedra. Here we construct a list of these
 /// tetrahedra, identified by their vertices (four of the eight corners of the cubic subcell).
 /// The vertices are specified by their relation to one corner of the subcell.
-fn tetra_indices() -> (Vec<[usize; 4]>, Vec<[usize; 3]>) {
-    let tetras = vec![
+fn tetra_indices() -> ([[usize; 4]; 6], [[usize; 3]; 8]) {
+    let tetras = [
         [0, 1, 2, 5],
         [0, 2, 4, 5],
         [2, 4, 5, 6],
@@ -103,7 +102,7 @@ fn tetra_indices() -> (Vec<[usize; 4]>, Vec<[usize; 3]>) {
         [2, 3, 5, 7],
         [1, 2, 3, 5],
     ];
-    let vertices = vec![
+    let vertices = [
         [0, 0, 0],
         [1, 0, 0],
         [0, 1, 0],
@@ -160,19 +159,19 @@ fn subcell_neighbors(point: &[usize; 3], dims: &[usize; 3]) -> Vec<[usize; 3]> {
 /// given tetrahedron located inside the given subcell.
 fn get_tetra_vertices(
     tetra: &[usize; 4],
-    vertex_diffs: &Vec<[usize; 3]>,
+    vertex_diffs: &[[usize; 3]; 8],
     subcell: &[usize; 3],
-) -> Vec<[usize; 3]> {
-    let mut vertices = Vec::new();
+) -> [[usize; 3]; 4] {
+    let mut vertices = [[0; 3]; 4];
 
-    for diff_index in tetra {
+    for (vertex_index, diff_index) in tetra.iter().enumerate() {
         let vertex_diff = vertex_diffs[*diff_index];
 
-        let vertex = (0..3)
-            .map(|i| subcell[i] + vertex_diff[i])
-            .collect::<Vec<usize>>();
-
-        vertices.push([vertex[0], vertex[1], vertex[2]]);
+        vertices[vertex_index] = [
+            subcell[0] + vertex_diff[0],
+            subcell[1] + vertex_diff[1],
+            subcell[2] + vertex_diff[2],
+        ];
     }
 
     vertices
@@ -180,7 +179,7 @@ fn get_tetra_vertices(
 
 /// Return true iff the tetrahedron identified by tetra, inside the given subcell,
 /// contains the given point as a vertex.
-fn contains_point(vertices: &Vec<[usize; 3]>, point: &[usize; 3]) -> bool {
+fn contains_point(vertices: &[[usize; 3]; 4], point: &[usize; 3]) -> bool {
     for vertex in vertices {
         if point.iter().zip(vertex).all(|(pi, vi)| pi == vi) {
             return true;
