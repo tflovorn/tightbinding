@@ -147,9 +147,12 @@ impl EvecCache {
         k_stop: [f64; 3],
     ) -> EvecCache {
         let mut points = Vec::new();
-        for i0 in 0..dims[0] + 1 {
+        for i2 in 0..dims[2] + 1 {
             for i1 in 0..dims[1] + 1 {
-                for i2 in 0..dims[2] + 1 {
+                for i0 in 0..dims[0] + 1 {
+                    let point = [i0, i1, i2];
+                    assert_eq!(points.len(), grid_index(&point, &dims));
+
                     points.push([i0, i1, i2]);
                 }
             }

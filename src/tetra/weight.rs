@@ -15,10 +15,11 @@ pub fn all_weights<G: EnergyGrid>(
     let mut weights_kn = Vec::new();
     let dims = grid.dims();
 
-    for i0 in 0..dims[0] + 1 {
+    for i2 in 0..dims[2] + 1 {
         for i1 in 0..dims[1] + 1 {
-            for i2 in 0..dims[2] + 1 {
+            for i0 in 0..dims[0] + 1 {
                 let point = [i0, i1, i2];
+                assert_eq!(weights_kn.len(), grid_index(&point, &grid.dims()));
 
                 weights_kn.push(band_weights(grid, fermi, use_curvature_correction, &point));
             }
