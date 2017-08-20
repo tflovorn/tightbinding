@@ -1,4 +1,4 @@
-use float::NonNan;
+use std::f64::MAX;
 use vec_util::transpose_vecs;
 use tetra::grid::{EnergyGrid, grid_index};
 use tetra::dos::dos_contrib;
@@ -56,23 +56,16 @@ pub fn band_weights<G: EnergyGrid>(
             }
 
             // Collect band energies at the vertices of this tetrahedron.
-            let vertex_energies: Vec<&Vec<f64>> = vertices
-                .iter()
-                .map(|v| grid_index(v, &grid.dims()))
-                .map(|i| grid.energy(i))
-                .collect();
+            let vertex_energies = [
+                grid.energy(grid_index(&vertices[0], &grid.dims())),
+                grid.energy(grid_index(&vertices[1], &grid.dims())),
+                grid.energy(grid_index(&vertices[2], &grid.dims())),
+                grid.energy(grid_index(&vertices[3], &grid.dims())),
+            ];
 
             for band_index in 0..grid.bands() {
                 // For each band, sort vertices according to band energy.
-                let mut sorted_es_vs: Vec<(f64, &[usize; 3])> = vertex_energies
-                    .iter()
-                    .map(|es| es[band_index])
-                    .zip(&vertices)
-                    .collect();
-                sorted_es_vs.sort_by_key(|&(e, _)| NonNan::new(e).unwrap());
-
-                let sorted_es = sorted_es_vs.iter().map(|&(e, _)| e).collect();
-                let sorted_vs = sorted_es_vs.iter().map(|&(_, v)| v).collect();
+                let (sorted_es, sorted_vs) = sort_vertices(&vertex_energies, &vertices, band_index);
 
                 // Get the weight contribution for each vertex.
                 let tetra_weights =
@@ -189,11 +182,65 @@ fn contains_point(vertices: &[[usize; 3]; 4], point: &[usize; 3]) -> bool {
     false
 }
 
+/// Given a set of vertices, return their energies in sorted order and
+/// those vertices sorted in the same order.
+fn sort_vertices(
+    vertex_energies: &[&Vec<f64>; 4],
+    vertices: &[[usize; 3]; 4],
+    band_index: usize,
+) -> ([f64; 4], [[usize; 3]; 4]) {
+    let band_energies = [
+        vertex_energies[0][band_index],
+        vertex_energies[1][band_index],
+        vertex_energies[2][band_index],
+        vertex_energies[3][band_index],
+    ];
+
+    let order = get_order(band_energies);
+
+    let sorted_es = [
+        band_energies[order[0]],
+        band_energies[order[1]],
+        band_energies[order[2]],
+        band_energies[order[3]],
+    ];
+
+    let sorted_vs = [
+        vertices[order[0]],
+        vertices[order[1]],
+        vertices[order[2]],
+        vertices[order[3]],
+    ];
+
+    (sorted_es, sorted_vs)
+}
+
+/// Return the order in which xs is sorted. See tests::check_get_order() for
+/// an example.
+fn get_order(mut xs: [f64; 4]) -> [usize; 4] {
+    let mut order = [0; 4];
+
+    for i in 0..4 {
+        let mut min = MAX;
+        let mut min_index = 0;
+        for j in 0..4 {
+            if xs[j] < min {
+                min_index = j;
+                min = xs[j];
+            }
+        }
+        order[i] = min_index;
+        xs[min_index] = MAX;
+    }
+
+    order
+}
+
 /// Return Some(v_index), where sorted_vs[v_index] == point, if such a v_index exists;
 /// otherwise return None.
-fn find_point_index(sorted_vs: &Vec<&[usize; 3]>, point: &[usize; 3]) -> Option<usize> {
+fn find_point_index(sorted_vs: &[[usize; 3]; 4], point: &[usize; 3]) -> Option<usize> {
     for (v_index, vertex) in sorted_vs.iter().enumerate() {
-        if point.iter().zip(*vertex).all(|(pi, vi)| pi == vi) {
+        if point.iter().zip(vertex.iter()).all(|(pi, vi)| pi == vi) {
             return Some(v_index);
         }
     }
@@ -202,13 +249,13 @@ fn find_point_index(sorted_vs: &Vec<&[usize; 3]>, point: &[usize; 3]) -> Option<
 }
 
 /// Return the weight contributions of the tetrahedron vertices with energies given
-/// by `sorted_es`.
+/// in ascending order by `sorted_es`.
 fn weight_contrib<G: EnergyGrid>(
     grid: &G,
     fermi: f64,
     use_curvature_correction: bool,
-    sorted_es: &Vec<f64>,
-) -> Vec<f64> {
+    sorted_es: &[f64; 4],
+) -> [f64; 4] {
     let fac = grid.tetra_volume() / 4.0;
     let (e1, e2, e3, e4) = (sorted_es[0], sorted_es[1], sorted_es[2], sorted_es[3]);
     let mut ws = [0.0; 4];
@@ -253,18 +300,38 @@ fn weight_contrib<G: EnergyGrid>(
     if use_curvature_correction {
         let ccs = curvature_correction(grid, fermi, sorted_es);
 
-        ws.iter().zip(ccs).map(|(w, cc)| w + cc).collect()
+        [
+            ws[0] + ccs[0],
+            ws[1] + ccs[1],
+            ws[2] + ccs[2],
+            ws[3] + ccs[3],
+        ]
     } else {
-        ws.to_vec()
+        ws
     }
 }
 
-fn curvature_correction<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &Vec<f64>) -> Vec<f64> {
+/// Return the curvature corrections for the tetrahedron vertices with
+/// energies given in ascending order by `sorted_es`.
+fn curvature_correction<G: EnergyGrid>(grid: &G, fermi: f64, sorted_es: &[f64; 4]) -> [f64; 4] {
     let dos_tetra = dos_contrib(grid, fermi, sorted_es);
     let sum_es: f64 = sorted_es.iter().sum();
 
-    sorted_es
-        .iter()
-        .map(|e| (dos_tetra / 40.0) * (sum_es - 4.0 * e))
-        .collect()
+    [
+        (dos_tetra / 40.0) * (sum_es - 4.0 * sorted_es[0]),
+        (dos_tetra / 40.0) * (sum_es - 4.0 * sorted_es[1]),
+        (dos_tetra / 40.0) * (sum_es - 4.0 * sorted_es[2]),
+        (dos_tetra / 40.0) * (sum_es - 4.0 * sorted_es[3]),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_order;
+
+    #[test]
+    fn check_get_order() {
+        let xs = [0.0, -5.0, 3.0, 2.0];
+        assert_eq!(get_order(xs), [1, 0, 3, 2]);
+    }
 }

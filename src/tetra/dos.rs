@@ -1,6 +1,6 @@
 use tetra::grid::EnergyGrid;
 
-pub fn dos_contrib<G: EnergyGrid>(grid: &G, e: f64, sorted_es: &Vec<f64>) -> f64 {
+pub fn dos_contrib<G: EnergyGrid>(grid: &G, e: f64, sorted_es: &[f64; 4]) -> f64 {
     let fac = grid.tetra_volume();
     let (e1, e2, e3, e4) = (sorted_es[0], sorted_es[1], sorted_es[2], sorted_es[3]);
 
