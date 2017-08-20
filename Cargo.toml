@@ -15,6 +15,7 @@ rayon = "0.8.2"
 
 [dev-dependencies]
 pre-commit = "0.5.2"
+bencher = "0.1.4"
 
 [dependencies.linxal]
 version = "0.6.0"
@@ -28,3 +29,7 @@ test = "cargo test 2>&1"
 [[bin]]
 name = "tb_w90_dos"
 path = "src/bin/tb_w90_dos.rs"
+
+[[bench]]
+name = "diamond_dos"
+harness = false
