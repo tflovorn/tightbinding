@@ -111,8 +111,9 @@ fn cubic_nn() {
     let fermi_mid = find_fermi(&cache, mid_occupation);
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 
+    let use_curvature_correction = true;
     let num_energies = 10;
-    let (_, dos) = dos_from_num(&cache, num_energies);
+    let (_, dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
 
     let expected_dos = vec![
         0.018518518518518514,

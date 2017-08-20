@@ -7,6 +7,7 @@ use tetra::{EvecGrid, all_weights, orbital_number};
 pub fn dos_from_num<G: Sync + EvecGrid>(
     grid: &G,
     num_energies: usize,
+    use_curvature_correction: bool,
 ) -> (Vec<f64>, Vec<Vec<f64>>) {
     let (min_e, max_e) = grid.energy_bounds();
 
@@ -14,7 +15,6 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         .as_slice()
         .unwrap()
         .to_vec();
-    let use_curvature_correction = true;
 
     let orbital_nums = transpose_vecs(
         &(es.par_iter()
