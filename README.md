@@ -1,4 +1,12 @@
-# Dependencies
+# tightbinding
+
+Tools for working with tight-binding models (defined by a map from lattice
+vectors R to H(R) = <0|H|R>) and models defined directly on k-space as H(k).
+
+Includes an implementation of the linear tetrahedron method with curvature
+corrections as defined in Blöchl, Jepsen, and Andersen, PRB 49, 16223 (1994).
+
+## Dependencies
 
 Test data is stored in Git LFS. Before cloning the repository, install Git LFS:
 
@@ -15,3 +23,11 @@ This assumes $HOME/bin is on your $PATH. If it is not, add the following to ~/.b
 Requires liblapacke. To install on Debian-based distributions:
 
     sudo apt-get install liblapacke-dev
+
+## Binaries
+
+### `tb_w90_dos`
+
+Extract a tight-binding model from an `hr.dat` file as produced by Wannier90
+and an accompanying `data-file.xml` from a self-consistent Quantum Espresso
+calculation. Produce the density of states of this model.
