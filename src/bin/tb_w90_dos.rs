@@ -82,19 +82,12 @@ fn main() {
     let hk_fn = |k| hk_lat(&model, &k);
 
     let cache = EvecCache::new(hk_fn, model.bands(), dims, k_start, k_stop);
-    let (es, dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
-
-    let mut total_dos = vec![0.0; es.len()];
-    for band_dos in dos.iter() {
-        for (e_index, e_dos) in band_dos.iter().enumerate() {
-            total_dos[e_index] += *e_dos;
-        }
-    }
+    let (es, orbital_dos, total_dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
 
     let json_out = json!({
         "es": es,
         "total_dos": total_dos,
-        "orbital_dos": dos
+        "orbital_dos": orbital_dos
     });
 
     let out_path = format!("{}_dos.json", prefix);

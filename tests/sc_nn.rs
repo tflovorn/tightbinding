@@ -113,7 +113,7 @@ fn cubic_nn() {
 
     let use_curvature_correction = true;
     let num_energies = 10;
-    let (_, dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
+    let (_, _, total_dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
 
     let expected_dos = vec![
         0.018518518518518514,
@@ -129,7 +129,7 @@ fn cubic_nn() {
     let eps_abs_dos = 1e-12 / t;
     let eps_rel_dos = 1e-12;
 
-    for (x, y) in dos[0].iter().zip(expected_dos) {
+    for (x, y) in total_dos.iter().zip(expected_dos) {
         assert!(is_near_float(*x, y, eps_abs_dos, eps_rel_dos));
     }
 }
