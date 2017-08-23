@@ -1,3 +1,7 @@
+extern crate num_complex;
+extern crate ndarray;
+extern crate tightbinding;
+
 use std::f64::consts::PI;
 use std::collections::HashMap;
 use num_complex::Complex64;
@@ -15,6 +19,10 @@ pub struct SimpleCubicNNModel {
 }
 
 impl SimpleCubicNNModel {
+    // dead_code warning is disabled since it is triggered when any test that uses
+    // the sample_models module does not use all the functions. Each test will
+    // only use some of them - don't want to be warned about this.
+    #[allow(dead_code)]
     pub fn new(t: f64, a: f64) -> SimpleCubicNNModel {
         let mut hrs = HashMap::new();
 
@@ -32,6 +40,7 @@ impl SimpleCubicNNModel {
         SimpleCubicNNModel { hrs, d }
     }
 
+    #[allow(dead_code)]
     pub fn epsilon(t: f64, k_lat: &[f64; 3]) -> f64 {
         -2.0 * t *
             ((2.0 * PI * k_lat[0]).cos() + (2.0 * PI * k_lat[1]).cos() +

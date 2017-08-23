@@ -3,8 +3,6 @@ extern crate ndarray;
 extern crate serde_json;
 extern crate tightbinding;
 
-use std::path::PathBuf;
-use std::fs::File;
 use std::f64::consts::PI;
 use num_complex::Complex64;
 use ndarray::Array2;
@@ -13,10 +11,13 @@ use tightbinding::Model;
 use tightbinding::fourier::{hk_lat, hk_cart};
 use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
 use tightbinding::tetra::find_fermi;
-use tightbinding::dos::{DosValues, dos_from_num};
+use tightbinding::dos::dos_from_num;
 
 mod sample_models;
 use sample_models::SimpleCubicNNModel;
+
+mod dos_util;
+use dos_util::{write_dos_out, read_dos, check_dos};
 
 #[test]
 fn cubic_nn() {
@@ -91,7 +92,7 @@ fn cubic_nn() {
 
 #[test]
 #[ignore]
-fn sc_nn_full_dos() {
+fn sc_nn_dos() {
     let t = 1.0;
     let bands = 1;
 
@@ -111,32 +112,16 @@ fn sc_nn_full_dos() {
     let num_energies = 1001;
     let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
 
-    let out_path = PathBuf::from("plot/test_sc_nn_dos.json");
-    let out_file = File::create(out_path).expect(
-        "Error creating output file: sc_nn_full_dos expects to be run in crate root.",
+    let prefix = "sc_nn";
+    write_dos_out(&dos, &prefix);
+    let expected_dos = read_dos(&prefix);
+
+    check_dos(
+        &dos,
+        &expected_dos,
+        eps_abs_e,
+        eps_rel,
+        eps_abs_dos,
+        eps_rel,
     );
-    serde_json::to_writer(&out_file, &dos).expect("Error writing output file");
-
-    let expected_path = PathBuf::from("test_data/sc_nn/test_sc_nn_dos.json");
-    let expected_file = File::open(expected_path).expect(
-        "Error creating output file: sc_nn_full_dos expects to be run in crate root.",
-    );
-    let expected_dos: DosValues =
-        serde_json::from_reader(&expected_file).expect("Error reading expected data file");
-
-    for (e_out, e_expected) in dos.es.iter().zip(expected_dos.es.iter()) {
-        assert!(is_near_float(*e_out, *e_expected, eps_abs_e, eps_rel));
-    }
-
-    for (band_dos_out, band_dos_expected) in
-        dos.orbital_dos.iter().zip(expected_dos.orbital_dos.iter())
-    {
-        for (dos_out, dos_expected) in band_dos_out.iter().zip(band_dos_expected.iter()) {
-            assert!(is_near_float(*dos_out, *dos_expected, eps_abs_dos, eps_rel));
-        }
-    }
-
-    for (dos_out, dos_expected) in dos.total_dos.iter().zip(expected_dos.total_dos.iter()) {
-        assert!(is_near_float(*dos_out, *dos_expected, eps_abs_dos, eps_rel));
-    }
 }
