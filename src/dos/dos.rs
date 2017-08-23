@@ -4,11 +4,18 @@ use rayon::prelude::*;
 use vec_util::transpose_vecs;
 use tetra::{EvecGrid, all_weights, orbital_number};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DosValues {
+    pub es: Vec<f64>,
+    pub orbital_dos: Vec<Vec<f64>>,
+    pub total_dos: Vec<f64>,
+}
+
 pub fn dos_from_num<G: Sync + EvecGrid>(
     grid: &G,
     num_energies: usize,
     use_curvature_correction: bool,
-) -> (Vec<f64>, Vec<Vec<f64>>, Vec<f64>) {
+) -> DosValues {
     let (min_e, max_e) = grid.energy_bounds();
 
     let es = Array1::linspace(min_e, max_e, num_energies)
@@ -53,5 +60,9 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         }
     }
 
-    (es[1..num_energies - 1].to_vec(), orbital_dos, total_dos)
+    DosValues {
+        es: es[1..num_energies - 1].to_vec(),
+        orbital_dos,
+        total_dos,
+    }
 }

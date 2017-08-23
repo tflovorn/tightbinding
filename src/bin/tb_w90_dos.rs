@@ -1,12 +1,10 @@
 extern crate clap;
-#[macro_use]
 extern crate serde_json;
 extern crate tightbinding;
 
 use std::env;
 use std::path::PathBuf;
 use std::fs::File;
-use std::io::Write;
 use clap::{Arg, App};
 use tightbinding::Model;
 use tightbinding::w90::W90Model;
@@ -82,18 +80,10 @@ fn main() {
     let hk_fn = |k| hk_lat(&model, &k);
 
     let cache = EvecCache::new(hk_fn, model.bands(), dims, k_start, k_stop);
-    let (es, orbital_dos, total_dos) = dos_from_num(&cache, num_energies, use_curvature_correction);
-
-    let json_out = json!({
-        "es": es,
-        "total_dos": total_dos,
-        "orbital_dos": orbital_dos
-    });
+    let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
 
     let out_path = format!("{}_dos.json", prefix);
 
-    let mut file = File::create(out_path).expect("Eror creating output file");
-    file.write_all(format!("{}", json_out).as_bytes()).expect(
-        "Error writing output file",
-    );
+    let out_file = File::create(out_path).expect("Eror creating output file");
+    serde_json::to_writer(&out_file, &dos).expect("Error writing output file");
 }

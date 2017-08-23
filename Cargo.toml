@@ -11,6 +11,8 @@ sxd-document = "0.2.4"
 sxd-xpath = "0.4.1"
 itertools = "0.6.1"
 clap = "2.26.0"
+serde = "1.0.11"
+serde_derive = "1.0.11"
 serde_json = "1.0"
 rayon = "0.8.2"
 
