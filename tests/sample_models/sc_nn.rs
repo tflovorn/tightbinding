@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 use std::collections::HashMap;
 use num_complex::Complex64;
 use ndarray::Array2;
-use model::Model;
+use tightbinding::Model;
 
 /// One-band tight-binding model on the simple cubic lattice with uniform
 /// nearest-neighbor hopping.

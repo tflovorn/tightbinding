@@ -10,11 +10,13 @@ use num_complex::Complex64;
 use ndarray::Array2;
 use tightbinding::float::{is_near_complex, is_near_float};
 use tightbinding::Model;
-use tightbinding::sample_models::SimpleCubicNNModel;
 use tightbinding::fourier::{hk_lat, hk_cart};
 use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
 use tightbinding::tetra::find_fermi;
 use tightbinding::dos::{DosValues, dos_from_num};
+
+mod sample_models;
+use sample_models::SimpleCubicNNModel;
 
 #[test]
 fn cubic_nn() {
