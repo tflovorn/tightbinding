@@ -2,5 +2,5 @@
 /target/
 **/*.rs.bk
 Cargo.lock
-*_dos.json*
+plot/*_dos.json*
 *.png

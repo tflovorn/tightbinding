@@ -16,6 +16,8 @@ pub mod units;
 mod model;
 pub use model::Model;
 
+pub mod sample_models;
+
 pub mod fourier;
 pub mod qe;
 pub mod w90;

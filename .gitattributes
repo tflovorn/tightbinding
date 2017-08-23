@@ -1,3 +1,4 @@
 *_hr.dat filter=lfs diff=lfs merge=lfs -text
 *.data-file.xml filter=lfs diff=lfs merge=lfs -text
 *_bands.dat filter=lfs diff=lfs merge=lfs -text
+test_data/**/*.json filter=lfs diff=lfs merge=lfs -text
