@@ -95,10 +95,9 @@ pub fn grid_k(
 pub struct EvecCache {
     bands: usize,
     dims: [usize; 3],
-    k_start: [f64; 3],
-    k_stop: [f64; 3],
     energy: Vec<Vec<f64>>,
     evec: Vec<Array2<Complex64>>,
+    tetra_volume: f64,
 }
 
 impl EvecCache {
@@ -178,13 +177,15 @@ impl EvecCache {
             .map(|s| s.right_vectors.clone().unwrap())
             .collect();
 
+        let num_tetra = 6.0 * dims.iter().map(|x| *x as f64).product::<f64>();
+        let tetra_volume = 1.0 / num_tetra;
+
         EvecCache {
             bands,
             dims,
-            k_start,
-            k_stop,
             energy,
             evec,
+            tetra_volume,
         }
     }
 }
@@ -203,14 +204,7 @@ impl EnergyGrid for EvecCache {
     }
 
     fn tetra_volume(&self) -> f64 {
-        let k_volume: f64 = self.k_start
-            .iter()
-            .zip(&self.k_stop)
-            .map(|(start, stop)| stop - start)
-            .product();
-        let num_tetra = 6.0 * self.dims.iter().map(|x| *x as f64).product::<f64>();
-
-        k_volume / num_tetra
+        self.tetra_volume
     }
 }
 
