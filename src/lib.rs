@@ -1,3 +1,8 @@
+// Recommended setting for error_chain.
+#![recursion_limit = "1024"]
+
+#[macro_use]
+extern crate error_chain;
 extern crate num_complex;
 extern crate ndarray;
 extern crate linxal;
@@ -19,6 +24,8 @@ pub use model::Model;
 pub mod fourier;
 pub mod qe;
 pub mod w90;
+
+pub mod paths;
 
 pub mod tetra;
 pub mod dos;
