@@ -41,7 +41,11 @@ pub fn orbital_expectation_values<G: EvecGrid>(
     for (band_index, (x_ks, w_ks)) in x_nk.iter().zip(weights).enumerate() {
         for (grid_index, (x, w)) in x_ks.iter().zip(w_ks).enumerate() {
             for orbital_index in 0..grid.bands() {
-                let u = grid.evec(grid_index)[[orbital_index, band_index]];
+                // TODO move band_index iteration faster than orbital_index to
+                // access in optimal pattern.
+                // Could do this trivially if x, w were stored as x[k][m] instead
+                // of x[m][k].
+                let u = grid.evec()[[grid_index, orbital_index, band_index]];
 
                 evs[orbital_index] += u.norm_sqr() * x * w;
             }

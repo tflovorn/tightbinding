@@ -31,6 +31,7 @@ pub fn band_weights<G: EnergyGrid>(
     use_curvature_correction: bool,
     point: &[usize; 3],
 ) -> Vec<f64> {
+    let energy = grid.energy();
     let (tetra_indices, vertex_diffs) = tetra_indices();
     let neighbors = subcell_neighbors(point, &grid.dims());
 
@@ -48,16 +49,23 @@ pub fn band_weights<G: EnergyGrid>(
             }
 
             // Collect band energies at the vertices of this tetrahedron.
-            let vertex_energies = [
-                grid.energy(grid.grid_index(&vertices[0])),
-                grid.energy(grid.grid_index(&vertices[1])),
-                grid.energy(grid.grid_index(&vertices[2])),
-                grid.energy(grid.grid_index(&vertices[3])),
+            let vertex_indices = [
+                grid.grid_index(&vertices[0]),
+                grid.grid_index(&vertices[1]),
+                grid.grid_index(&vertices[2]),
+                grid.grid_index(&vertices[3]),
             ];
 
             for band_index in 0..grid.bands() {
+                let band_energies = [
+                    energy[[vertex_indices[0], band_index]],
+                    energy[[vertex_indices[1], band_index]],
+                    energy[[vertex_indices[2], band_index]],
+                    energy[[vertex_indices[3], band_index]],
+                ];
+
                 // For each band, sort vertices according to band energy.
-                let (sorted_es, sorted_vs) = sort_vertices(&vertex_energies, &vertices, band_index);
+                let (sorted_es, sorted_vs) = sort_vertices(band_energies, &vertices);
 
                 // Get the weight contribution for each vertex.
                 let tetra_weights =
@@ -177,17 +185,9 @@ fn contains_point(vertices: &[[usize; 3]; 4], point: &[usize; 3]) -> bool {
 /// Given a set of vertices, return their energies in sorted order and
 /// those vertices sorted in the same order.
 fn sort_vertices(
-    vertex_energies: &[&Vec<f64>; 4],
+    band_energies: [f64; 4],
     vertices: &[[usize; 3]; 4],
-    band_index: usize,
 ) -> ([f64; 4], [[usize; 3]; 4]) {
-    let band_energies = [
-        vertex_energies[0][band_index],
-        vertex_energies[1][band_index],
-        vertex_energies[2][band_index],
-        vertex_energies[3][band_index],
-    ];
-
     let order = get_order(band_energies);
 
     let sorted_es = [

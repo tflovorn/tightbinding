@@ -1,6 +1,6 @@
 use std::f64;
 use num_complex::Complex64;
-use ndarray::Array2;
+use ndarray::{Array2, Array3, Axis};
 use linxal::eigenvalues::SymEigen;
 use linxal::eigenvalues::types::Solution;
 use linxal::types::Symmetric;
@@ -48,23 +48,21 @@ pub trait KGrid {
 
 /// Converts discrete k-point grid coordinates to associated energy values.
 pub trait EnergyGrid: KGrid {
-    /// Band energies associated with the k-point at grid_index.
-    fn energy(&self, grid_index: usize) -> &Vec<f64>;
+    /// Band energies e[[grid_index, band_index]].
+    fn energy(&self) -> &Array2<f64>;
 
     /// Largest and smallest energy values contained in the grid.
     fn energy_bounds(&self) -> (f64, f64) {
         let mut min = NonNan::new(f64::MAX).unwrap();
         let mut max = NonNan::new(f64::MIN).unwrap();
 
-        for grid_index in 0..self.points().len() {
-            for e_f64 in self.energy(grid_index) {
-                let e = NonNan::new(*e_f64).unwrap();
-                if e < min {
-                    min = e;
-                }
-                if e > max {
-                    max = e;
-                }
+        for e_f64 in self.energy().iter() {
+            let e = NonNan::new(*e_f64).unwrap();
+            if e < min {
+                min = e;
+            }
+            if e > max {
+                max = e;
             }
         }
 
@@ -78,8 +76,8 @@ pub trait EnergyGrid: KGrid {
 /// Converts discrete k-point grid coordinates to associated eigenvectors.
 /// The eigenvectors are sorted in order of the corresponding eigenenergies.
 pub trait EvecGrid: EnergyGrid {
-    /// Eigenvectors associated with the k-point at grid_index.
-    fn evec(&self, grid_index: usize) -> &Array2<Complex64>;
+    /// Eigenvectors evec[[grid_index, orbital_index, band_index]].
+    fn evec(&self) -> &Array3<Complex64>;
 }
 
 /// Compute the linearized grid index associated with the given k-point index.
@@ -185,8 +183,8 @@ impl KCache {
 pub struct EvecCache {
     kcache: KCache,
     bands: usize,
-    energy: Vec<Vec<f64>>,
-    evec: Vec<Array2<Complex64>>,
+    energy: Array2<f64>,
+    evec: Array3<Complex64>,
 }
 
 impl EvecCache {
@@ -246,12 +244,18 @@ impl EvecCache {
             })
             .collect();
 
-        // TODO - how to extract these parts without clone?
-        let energy = solutions.iter().map(|s| s.values.to_vec()).collect();
-        let evec = solutions
-            .iter()
-            .map(|s| s.right_vectors.clone().unwrap())
-            .collect();
+        // TODO - could create these as uninitialized: will be visiting all elements.
+        // For simplicity, avoid unsafe behavior here.
+        let mut energy = Array2::zeros([kcache.points.len(), bands]);
+        let mut evec = Array3::zeros([kcache.points.len(), bands, bands]);
+
+        for (k_index, sol) in solutions.into_iter().enumerate() {
+            energy.subview_mut(Axis(0), k_index).assign(&sol.values);
+            evec.subview_mut(Axis(0), k_index).assign(
+                &sol.right_vectors
+                    .unwrap(),
+            );
+        }
 
         EvecCache {
             kcache,
@@ -289,8 +293,8 @@ impl KGrid for EvecCache {
 }
 
 impl EnergyGrid for EvecCache {
-    fn energy(&self, grid_index: usize) -> &Vec<f64> {
-        &self.energy[grid_index]
+    fn energy(&self) -> &Array2<f64> {
+        &self.energy
     }
 
     fn bands(&self) -> usize {
@@ -299,7 +303,7 @@ impl EnergyGrid for EvecCache {
 }
 
 impl EvecGrid for EvecCache {
-    fn evec(&self, grid_index: usize) -> &Array2<Complex64> {
-        &self.evec[grid_index]
+    fn evec(&self) -> &Array3<Complex64> {
+        &self.evec
     }
 }

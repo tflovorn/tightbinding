@@ -47,7 +47,7 @@ fn cubic_nn() {
 
     for (grid_index, k) in cache.ks().iter().enumerate() {
         assert!(is_near_float(
-            cache.energy(grid_index)[0],
+            cache.energy()[[grid_index, 0]],
             SimpleCubicNNModel::epsilon(t, k),
             eps_abs,
             eps_rel,

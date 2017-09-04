@@ -3,6 +3,7 @@ extern crate ndarray;
 extern crate linxal;
 extern crate tightbinding;
 
+use ndarray::Axis;
 use linxal::eigenvalues::SymEigen;
 use linxal::types::Symmetric;
 use tightbinding::float::is_near_float;
@@ -41,7 +42,11 @@ fn honeycomb_nn() {
         let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
         let es = solution.values.to_vec();
 
-        for (e_grid, e_expected) in cache.energy(grid_index).iter().zip(es.iter()) {
+        for (e_grid, e_expected) in
+            cache.energy().subview(Axis(0), grid_index).iter().zip(
+                es.iter(),
+            )
+        {
             assert!(is_near_float(*e_grid, *e_expected, eps_abs, eps_rel));
         }
     }
