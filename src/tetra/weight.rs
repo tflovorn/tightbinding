@@ -1,6 +1,6 @@
 use std::f64::MAX;
 use vec_util::transpose_vecs;
-use tetra::grid::{EnergyGrid, grid_index};
+use tetra::grid::EnergyGrid;
 use tetra::dos::dos_contrib;
 
 /// Return a list with elements `w[band_index][grid_index]` which gives the
@@ -13,17 +13,9 @@ pub fn all_weights<G: EnergyGrid>(
     use_curvature_correction: bool,
 ) -> Vec<Vec<f64>> {
     let mut weights_kn = Vec::new();
-    let dims = grid.dims();
 
-    for i2 in 0..dims[2] + 1 {
-        for i1 in 0..dims[1] + 1 {
-            for i0 in 0..dims[0] + 1 {
-                let point = [i0, i1, i2];
-                assert_eq!(weights_kn.len(), grid_index(&point, &grid.dims()));
-
-                weights_kn.push(band_weights(grid, fermi, use_curvature_correction, &point));
-            }
-        }
+    for point in grid.points() {
+        weights_kn.push(band_weights(grid, fermi, use_curvature_correction, &point));
     }
 
     transpose_vecs(&weights_kn)
@@ -57,10 +49,10 @@ pub fn band_weights<G: EnergyGrid>(
 
             // Collect band energies at the vertices of this tetrahedron.
             let vertex_energies = [
-                grid.energy(grid_index(&vertices[0], &grid.dims())),
-                grid.energy(grid_index(&vertices[1], &grid.dims())),
-                grid.energy(grid_index(&vertices[2], &grid.dims())),
-                grid.energy(grid_index(&vertices[3], &grid.dims())),
+                grid.energy(grid.grid_index(&vertices[0])),
+                grid.energy(grid.grid_index(&vertices[1])),
+                grid.energy(grid.grid_index(&vertices[2])),
+                grid.energy(grid.grid_index(&vertices[3])),
             ];
 
             for band_index in 0..grid.bands() {

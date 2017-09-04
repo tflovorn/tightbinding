@@ -8,7 +8,7 @@ use linxal::types::Symmetric;
 use tightbinding::float::is_near_float;
 use tightbinding::Model;
 use tightbinding::fourier::hk_lat;
-use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
+use tightbinding::tetra::{KGrid, EnergyGrid, EvecCache};
 use tightbinding::dos::dos_from_num;
 
 mod sample_models;
@@ -35,22 +35,14 @@ fn honeycomb_nn() {
 
     let cache = EvecCache::new(hk_fn, m.bands(), dims, k_start, k_stop);
 
-    for i2 in 0..dims[2] + 1 {
-        for i1 in 0..dims[1] + 1 {
-            for i0 in 0..dims[0] + 1 {
-                let point = [i0, i1, i2];
-                let index = grid_index(&point, &dims);
-                let k_lat = grid_k(&point, &dims, &k_start, &k_stop);
+    for (grid_index, k_lat) in cache.ks().iter().enumerate() {
+        let hk = HoneycombNNModel::hk_lat(t, k_lat);
 
-                let hk = HoneycombNNModel::hk_lat(t, &k_lat);
+        let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
+        let es = solution.values.to_vec();
 
-                let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
-                let es = solution.values.to_vec();
-
-                for (e_grid, e_expected) in cache.energy(index).iter().zip(es.iter()) {
-                    assert!(is_near_float(*e_grid, *e_expected, eps_abs, eps_rel));
-                }
-            }
+        for (e_grid, e_expected) in cache.energy(grid_index).iter().zip(es.iter()) {
+            assert!(is_near_float(*e_grid, *e_expected, eps_abs, eps_rel));
         }
     }
 }

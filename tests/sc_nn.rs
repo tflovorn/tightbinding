@@ -9,7 +9,7 @@ use ndarray::Array2;
 use tightbinding::float::{is_near_complex, is_near_float};
 use tightbinding::Model;
 use tightbinding::fourier::{hk_lat, hk_cart};
-use tightbinding::tetra::{EnergyGrid, EvecCache, grid_index, grid_k};
+use tightbinding::tetra::{KGrid, EnergyGrid, EvecCache};
 use tightbinding::tetra::find_fermi;
 use tightbinding::dos::dos_from_num;
 
@@ -45,21 +45,13 @@ fn cubic_nn() {
 
     let cache = EvecCache::new(hk_fn, m.bands(), dims, k_start, k_stop);
 
-    for i2 in 0..dims[2] + 1 {
-        for i1 in 0..dims[1] + 1 {
-            for i0 in 0..dims[0] + 1 {
-                let point = [i0, i1, i2];
-                let index = grid_index(&point, &dims);
-                let k_lat = grid_k(&point, &dims, &k_start, &k_stop);
-
-                assert!(is_near_float(
-                    cache.energy(index)[0],
-                    SimpleCubicNNModel::epsilon(t, &k_lat),
-                    eps_abs,
-                    eps_rel,
-                ))
-            }
-        }
+    for (grid_index, k) in cache.ks().iter().enumerate() {
+        assert!(is_near_float(
+            cache.energy(grid_index)[0],
+            SimpleCubicNNModel::epsilon(t, k),
+            eps_abs,
+            eps_rel,
+        ))
     }
 
     let mid_energy = 0.0;

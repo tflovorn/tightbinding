@@ -9,8 +9,45 @@ use rayon::prelude::*;
 
 use float::NonNan;
 
+pub trait KGrid {
+    /// Dimensions of the grid along [k1, k2, k3] directions.
+    ///
+    /// The full grid ranges in 0..dims[i]+1 in each direction;
+    /// the final point, at dims[i], is equivalent to the first point,
+    /// at 0, when the grid covers the full Brillouin zone.
+    fn dims(&self) -> [usize; 3];
+
+    /// Return a reference to the list of grid points.
+    fn points(&self) -> &Vec<[usize; 3]>;
+
+    /// Return the linearized grid index associated with the given k-point index.
+    ///
+    /// TODO - would passing copy of point, dims be more efficient?
+    ///
+    /// # Panics
+    ///
+    /// Panics if point is not a valid point on the grid, i.e. if point is not a value
+    /// stored in points().
+    fn grid_index(&self, point: &[usize; 3]) -> usize;
+
+    /// Return a reference to the list of k-points, which are given in reciprocal
+    /// lattice coordinates.
+    fn ks(&self) -> &Vec<[f64; 3]>;
+
+    /// Smallest and largest value of k included in each reciprocal lattice direction.
+    ///
+    /// When k_range = ([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), the full Brillouin zone is included.
+    fn k_range(&self) -> ([f64; 3], [f64; 3]);
+
+    /// Volume of a tetrahedron as a fraction of the sampled Brillouin zone volume.
+    ///
+    /// Equal to:
+    /// (1 / number of tetrahedra) = 1 / (6 * (dims[0] * dims[1] * dims[2])).
+    fn tetra_volume(&self) -> f64;
+}
+
 /// Converts discrete k-point grid coordinates to associated energy values.
-pub trait EnergyGrid {
+pub trait EnergyGrid: KGrid {
     /// Band energies associated with the k-point at grid_index.
     fn energy(&self, grid_index: usize) -> &Vec<f64>;
 
@@ -19,7 +56,7 @@ pub trait EnergyGrid {
         let mut min = NonNan::new(f64::MAX).unwrap();
         let mut max = NonNan::new(f64::MIN).unwrap();
 
-        for grid_index in 0..self.end_grid_index() {
+        for grid_index in 0..self.points().len() {
             for e_f64 in self.energy(grid_index) {
                 let e = NonNan::new(*e_f64).unwrap();
                 if e < min {
@@ -36,24 +73,6 @@ pub trait EnergyGrid {
 
     /// Number of bands at each k-point.
     fn bands(&self) -> usize;
-
-    /// Dimensions of the grid along [k1, k2, k3] directions.
-    ///
-    /// The full grid ranges in 0..dims[i]+1 in each direction;
-    /// the final point, at dims[i], is equivalent to the first point,
-    /// at 0, when the grid covers the full Brillouin zone.
-    fn dims(&self) -> [usize; 3];
-
-    /// End of the range for grid_index: takes values in range 0..end_grid_index().
-    fn end_grid_index(&self) -> usize {
-        grid_index(&self.dims(), &self.dims()) + 1
-    }
-
-    /// Volume of a tetrahedron as a fraction of the Brillouin zone volume.
-    ///
-    /// When the grid covers the full Brillouin zone, this is
-    /// (1 / number of tetrahedra) = (1 / (dims[0] * dims[1] * dims[2])).
-    fn tetra_volume(&self) -> f64;
 }
 
 /// Converts discrete k-point grid coordinates to associated eigenvectors.
@@ -66,14 +85,12 @@ pub trait EvecGrid: EnergyGrid {
 /// Compute the linearized grid index associated with the given k-point index.
 ///
 /// TODO - would passing copy of point, dims be more efficient?
-///
-/// TODO - prefer to move this to default impl in EnergyGrid?
-pub fn grid_index(point: &[usize; 3], dims: &[usize; 3]) -> usize {
+fn get_grid_index(point: &[usize; 3], dims: &[usize; 3]) -> usize {
     point[0] + (dims[0] + 1) * (point[1] + point[2] * (dims[1] + 1))
 }
 
 /// Convert the grid point to the corresponding k-point.
-pub fn grid_k(
+fn get_grid_k(
     point: &[usize; 3],
     dims: &[usize; 3],
     k_start: &[f64; 3],
@@ -92,19 +109,89 @@ pub fn grid_k(
 /// Cache storing the eigenvalues and eigenvectors of a model computed
 /// on the k-point grid bounded by `k_start` and `k_stop` and with number of
 /// k-points in each direction given by `dims`.
-pub struct EvecCache {
-    bands: usize,
+struct KCache {
     dims: [usize; 3],
+    k_start: [f64; 3],
+    k_stop: [f64; 3],
+    tetra_volume: f64,
+    points: Vec<[usize; 3]>,
+    ks: Vec<[f64; 3]>,
+}
+
+impl KCache {
+    /// Construct a new KCache with the given number of k-points in each reciprocal lattice
+    /// direction and occupying the given region of the Brillouin zone.
+    ///
+    /// TODO convert k from original coordinates to coordinates with sign / order of G permuted to
+    /// minimize tetrahedron length: "In order to minimize interpolation distances the shortest
+    /// main diagonal is chosen." Ensure that k_start, k_stop are used correctly when this is done:
+    /// permute elements / change sign of k_start, k_stop in the same way as reciprocal lattice
+    /// vectors are permuted / changed sign.
+    ///
+    /// TODO consider symmetry operations which make some k-points redundant.
+    /// Since Wannier90 makes no guarantees about preserving symmetry
+    /// (unless symmetry-preservation is enabled, which forbids use of inner window),
+    /// would we be able to take advantage of symmetry operations if they were implemented?
+    ///
+    /// # Arguments
+    ///
+    /// * `dims` - the number of points to sample inside the Brillouin zone
+    /// along each (lattice coordinate) direction.
+    ///
+    /// * `k_start` - smallest value of k (in lattice coordinates) to sample
+    /// in each direction.
+    ///
+    /// * `k_start` - largest value of k (in lattice coordinates) to sample in
+    /// each direction. To sample the whole Brillouin zone, give
+    /// k_start = [0.0, 0.0, 0.0] and k_stop = [1.0, 1.0, 1.0].
+    pub fn new(dims: [usize; 3], k_start: [f64; 3], k_stop: [f64; 3]) -> KCache {
+        let end_grid_index = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
+
+        let mut points = Vec::with_capacity(end_grid_index);
+        let mut ks = Vec::with_capacity(end_grid_index);
+
+        let mut grid_index = 0;
+        for i2 in 0..dims[2] + 1 {
+            for i1 in 0..dims[1] + 1 {
+                for i0 in 0..dims[0] + 1 {
+                    let point = [i0, i1, i2];
+
+                    points.push(point);
+                    ks.push(get_grid_k(&point, &dims, &k_start, &k_stop));
+
+                    grid_index += 1;
+                }
+            }
+        }
+
+        assert_eq!(grid_index, end_grid_index);
+
+        let num_tetra = 6.0 * dims.iter().map(|x| *x as f64).product::<f64>();
+        let tetra_volume = 1.0 / num_tetra;
+
+        KCache {
+            dims,
+            k_start,
+            k_stop,
+            tetra_volume,
+            points,
+            ks,
+        }
+    }
+}
+
+/// Cache storing the eigenvalues and eigenvectors of a model computed
+/// on the k-point grid defined by kcache.
+pub struct EvecCache {
+    kcache: KCache,
+    bands: usize,
     energy: Vec<Vec<f64>>,
     evec: Vec<Array2<Complex64>>,
-    tetra_volume: f64,
 }
 
 impl EvecCache {
     /// Construct a new EvecCache from the given model, with the given number of k-points in
-    /// each reciprocal lattice direction and occupying the given region of the Brillouin zone
-    /// (to sample the full Brillouin zone, set k_start = [0.0, 0.0, 0.0] and
-    /// k_stop = [1.0, 1.0, 1.0]).
+    /// each reciprocal lattice direction and occupying the given region of the Brillouin zone.
     ///
     /// TODO prefer to pass hk_fn as trait giving hk_lat()?
     ///
@@ -145,24 +232,13 @@ impl EvecCache {
         k_start: [f64; 3],
         k_stop: [f64; 3],
     ) -> EvecCache {
-        let mut points = Vec::new();
-        for i2 in 0..dims[2] + 1 {
-            for i1 in 0..dims[1] + 1 {
-                for i0 in 0..dims[0] + 1 {
-                    let point = [i0, i1, i2];
-                    assert_eq!(points.len(), grid_index(&point, &dims));
+        let kcache = KCache::new(dims, k_start, k_stop);
 
-                    points.push([i0, i1, i2]);
-                }
-            }
-        }
-
-        let solutions: Vec<Solution<Complex64, f64>> = points
+        let solutions: Vec<Solution<Complex64, f64>> = kcache
+            .ks
             .par_iter()
-            .map(|point| {
-                let k = grid_k(point, &dims, &k_start, &k_stop);
-
-                let hk = hk_fn(k);
+            .map(|k| {
+                let hk = hk_fn(*k);
                 // TODO could return Err if this assertion fails instead of panicking.
                 assert!(hk.dim() == (bands, bands));
 
@@ -177,16 +253,38 @@ impl EvecCache {
             .map(|s| s.right_vectors.clone().unwrap())
             .collect();
 
-        let num_tetra = 6.0 * dims.iter().map(|x| *x as f64).product::<f64>();
-        let tetra_volume = 1.0 / num_tetra;
-
         EvecCache {
+            kcache,
             bands,
-            dims,
             energy,
             evec,
-            tetra_volume,
         }
+    }
+}
+
+impl KGrid for EvecCache {
+    fn dims(&self) -> [usize; 3] {
+        self.kcache.dims
+    }
+
+    fn points(&self) -> &Vec<[usize; 3]> {
+        &self.kcache.points
+    }
+
+    fn grid_index(&self, point: &[usize; 3]) -> usize {
+        get_grid_index(point, &self.kcache.dims)
+    }
+
+    fn ks(&self) -> &Vec<[f64; 3]> {
+        &self.kcache.ks
+    }
+
+    fn k_range(&self) -> ([f64; 3], [f64; 3]) {
+        (self.kcache.k_start, self.kcache.k_stop)
+    }
+
+    fn tetra_volume(&self) -> f64 {
+        self.kcache.tetra_volume
     }
 }
 
@@ -197,14 +295,6 @@ impl EnergyGrid for EvecCache {
 
     fn bands(&self) -> usize {
         self.bands
-    }
-
-    fn dims(&self) -> [usize; 3] {
-        self.dims
-    }
-
-    fn tetra_volume(&self) -> f64 {
-        self.tetra_volume
     }
 }
 
