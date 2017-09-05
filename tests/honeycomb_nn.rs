@@ -70,9 +70,8 @@ fn honeycomb_nn_dos() {
 
     let cache = EvecCache::new(hk_fn, bands, dims, k_start, k_stop);
 
-    let use_curvature_correction = false;
     let num_energies = 1001;
-    let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
+    let dos = dos_from_num(&cache, num_energies);
 
     let prefix = "honeycomb_nn";
     write_dos_out(&dos, &prefix);

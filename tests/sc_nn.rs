@@ -59,9 +59,8 @@ fn cubic_nn() {
     let fermi_mid = find_fermi(&cache, mid_occupation);
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 
-    let use_curvature_correction = true;
     let num_energies = 10;
-    let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
+    let dos = dos_from_num(&cache, num_energies);
 
     let expected_dos = vec![
         0.018518518518518514,
@@ -100,9 +99,8 @@ fn sc_nn_dos() {
 
     let cache = EvecCache::new(hk_fn, bands, dims, k_start, k_stop);
 
-    let use_curvature_correction = false;
     let num_energies = 1001;
-    let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
+    let dos = dos_from_num(&cache, num_energies);
 
     let prefix = "sc_nn";
     write_dos_out(&dos, &prefix);

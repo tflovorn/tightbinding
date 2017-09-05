@@ -11,17 +11,15 @@ pub struct DosValues {
     pub total_dos: Vec<f64>,
 }
 
-pub fn dos_from_num<G: Sync + EvecGrid>(
-    grid: &G,
-    num_energies: usize,
-    use_curvature_correction: bool,
-) -> DosValues {
+pub fn dos_from_num<G: Sync + EvecGrid>(grid: &G, num_energies: usize) -> DosValues {
     let (min_e, max_e) = grid.energy_bounds();
 
     let es = Array1::linspace(min_e, max_e, num_energies)
         .as_slice()
         .unwrap()
         .to_vec();
+
+    let use_curvature_correction = false;
 
     let orbital_nums = transpose_vecs(
         &(es.par_iter()

@@ -38,7 +38,6 @@ fn main() {
 
     // TODO make dims a parameter.
     // Want to allow specifying k_start, k_stop?
-    let use_curvature_correction = true;
     let dims = [8, 8, 8];
     let k_start = [0.0, 0.0, 0.0];
     let k_stop = [1.0, 1.0, 1.0];
@@ -46,7 +45,7 @@ fn main() {
     let hk_fn = |k| hk_lat(&model, &k);
 
     let cache = EvecCache::new(hk_fn, model.bands(), dims, k_start, k_stop);
-    let dos = dos_from_num(&cache, num_energies, use_curvature_correction);
+    let dos = dos_from_num(&cache, num_energies);
 
     let out_path = format!("{}_dos.json", prefix);
 

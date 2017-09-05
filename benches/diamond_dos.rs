@@ -14,11 +14,8 @@ fn diamond_dos(bench: &mut Bencher) {
     let cache = diamond_cache();
 
     let num_energies = 100;
-    let use_curvature_correction = true;
 
-    bench.iter(|| {
-        dos_from_num(&cache, num_energies, use_curvature_correction);
-    });
+    bench.iter(|| { dos_from_num(&cache, num_energies); });
 }
 
 fn diamond_cache() -> EvecCache {
