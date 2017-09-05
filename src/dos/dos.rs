@@ -27,7 +27,7 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         &(es.par_iter()
               .map(|e| {
             let w = all_weights(grid, *e, use_curvature_correction);
-            orbital_number(grid, &w)
+            orbital_number(grid, &w).to_vec()
         })
               .collect()),
     );

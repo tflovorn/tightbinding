@@ -1,52 +1,25 @@
 use std::f64::MAX;
-use vec_util::transpose_vecs;
+use ndarray::Array2;
 use tetra::grid::EnergyGrid;
 use tetra::dos::dos_contrib;
 
-/// Return a list with elements `w[band_index][grid_index]` which gives the
-/// weight w_{nk} of each (band, k-point) pair to the expectation value
+/// Return an array with elements `w[[grid_index, band_index]]` which gives the
+/// weight w_{kn} of each (k-point, band) pair to the expectation value
 ///
-/// <X_n> = \sum_k X_n(k) w_{nk}
+/// <X_n> = \sum_k X_n(k) w_{kn}
 pub fn all_weights<G: EnergyGrid>(
     grid: &G,
     fermi: f64,
     use_curvature_correction: bool,
-) -> Vec<Vec<f64>> {
-    let mut weights_kn = Vec::new();
-
-    for point in grid.points() {
-        weights_kn.push(band_weights(grid, fermi, use_curvature_correction, &point));
-    }
-
-    transpose_vecs(&weights_kn)
-}
-
-/// Return a list of the weights w_{nk}, which give the contribution of each band
-/// at the given k-point to the expectation value
-///
-/// <X_n> = \sum_k X_n(k) w_{nk}
-pub fn band_weights<G: EnergyGrid>(
-    grid: &G,
-    fermi: f64,
-    use_curvature_correction: bool,
-    point: &[usize; 3],
-) -> Vec<f64> {
+) -> Array2<f64> {
+    let mut weights_kn = Array2::zeros([grid.points().len(), grid.bands()]);
     let energy = grid.energy();
     let (tetra_indices, vertex_diffs) = tetra_indices();
-    let neighbors = subcell_neighbors(point, &grid.dims());
 
-    let mut weights = vec![0.0; grid.bands()];
-
-    // Iterate over all subcells neighboring the point specified by `point`.
-    for neighbor in neighbors {
+    for subcell in get_subcells(&grid.dims()) {
         // Iterate over all tetrahedra in this subcell.
         for tetra in tetra_indices.iter() {
-            let vertices = get_tetra_vertices(&tetra, &vertex_diffs, &neighbor);
-
-            // Skip tetrahedra that do not include `point` as a vertex.
-            if !contains_point(&vertices, &point) {
-                continue;
-            }
+            let vertices = get_tetra_vertices(&tetra, &vertex_diffs, &subcell);
 
             // Collect band energies at the vertices of this tetrahedron.
             let vertex_indices = [
@@ -65,20 +38,35 @@ pub fn band_weights<G: EnergyGrid>(
                 ];
 
                 // For each band, sort vertices according to band energy.
-                let (sorted_es, sorted_vs) = sort_vertices(band_energies, &vertices);
+                let (sorted_es, sorted_indices) = sort_vertices(band_energies, &vertex_indices);
 
                 // Get the weight contribution for each vertex.
                 let tetra_weights =
                     weight_contrib(grid, fermi, use_curvature_correction, &sorted_es);
 
-                // Add the weight contribution from the vertex `point` to the total.
-                let point_index = find_point_index(&sorted_vs, &point).unwrap();
-                weights[band_index] += tetra_weights[point_index];
+                // Add the weight contributions to the total.
+                for (weight, grid_index) in tetra_weights.iter().zip(sorted_indices.iter()) {
+                    weights_kn[[*grid_index, band_index]] += *weight;
+                }
             }
         }
     }
 
-    weights
+    weights_kn
+}
+
+fn get_subcells(dims: &[usize; 3]) -> Vec<[usize; 3]> {
+    let mut subcells = Vec::with_capacity(dims[0] * dims[1] * dims[2]);
+
+    for s_i2 in 0..dims[2] {
+        for s_i1 in 0..dims[1] {
+            for s_i0 in 0..dims[0] {
+                subcells.push([s_i0, s_i1, s_i2]);
+            }
+        }
+    }
+
+    subcells
 }
 
 /// Return the vertices of each tetrahedron in a subcell.
@@ -109,45 +97,6 @@ fn tetra_indices() -> ([[usize; 4]; 6], [[usize; 3]; 8]) {
     (tetras, vertices)
 }
 
-/// Return a list of points identifying each cubic subcell which neighbors the subcell
-/// at the given point.
-fn subcell_neighbors(point: &[usize; 3], dims: &[usize; 3]) -> Vec<[usize; 3]> {
-    let mut neighbors = Vec::new();
-
-    let bounds = vec![
-        [dims[0], dims[1], dims[2]],
-        [0, dims[1], dims[2]],
-        [dims[0], 0, dims[2]],
-        [0, 0, dims[2]],
-        [dims[0], dims[1], 0],
-        [0, dims[1], 0],
-        [dims[0], 0, 0],
-        [0, 0, 0],
-    ];
-    // usize can't be negative, but we can subtract one usize from another.
-    // Give list of (-difference) values here, which are all non-negative.
-    let mdiffs = vec![
-        [0, 0, 0],
-        [1, 0, 0],
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 0, 1],
-        [1, 0, 1],
-        [0, 1, 1],
-        [1, 1, 1],
-    ];
-
-    for (bound, mdiff) in bounds.iter().zip(mdiffs) {
-        if (0..3).all(|i| point[i] != bound[i]) {
-            let neighbor = (0..3).map(|i| point[i] - mdiff[i]).collect::<Vec<usize>>();
-
-            neighbors.push([neighbor[0], neighbor[1], neighbor[2]]);
-        }
-    }
-
-    neighbors
-}
-
 /// Give the point coordinates `[i0, i1, i2]` for each of the vertices of the
 /// given tetrahedron located inside the given subcell.
 fn get_tetra_vertices(
@@ -170,24 +119,9 @@ fn get_tetra_vertices(
     vertices
 }
 
-/// Return true iff the tetrahedron identified by tetra, inside the given subcell,
-/// contains the given point as a vertex.
-fn contains_point(vertices: &[[usize; 3]; 4], point: &[usize; 3]) -> bool {
-    for vertex in vertices {
-        if point.iter().zip(vertex).all(|(pi, vi)| pi == vi) {
-            return true;
-        }
-    }
-
-    false
-}
-
 /// Given a set of vertices, return their energies in sorted order and
 /// those vertices sorted in the same order.
-fn sort_vertices(
-    band_energies: [f64; 4],
-    vertices: &[[usize; 3]; 4],
-) -> ([f64; 4], [[usize; 3]; 4]) {
+fn sort_vertices(band_energies: [f64; 4], vertex_indices: &[usize; 4]) -> ([f64; 4], [usize; 4]) {
     let order = get_order(band_energies);
 
     let sorted_es = [
@@ -197,14 +131,14 @@ fn sort_vertices(
         band_energies[order[3]],
     ];
 
-    let sorted_vs = [
-        vertices[order[0]],
-        vertices[order[1]],
-        vertices[order[2]],
-        vertices[order[3]],
+    let sorted_indices = [
+        vertex_indices[order[0]],
+        vertex_indices[order[1]],
+        vertex_indices[order[2]],
+        vertex_indices[order[3]],
     ];
 
-    (sorted_es, sorted_vs)
+    (sorted_es, sorted_indices)
 }
 
 /// Return the order in which xs is sorted. See tests::check_get_order() for
@@ -226,18 +160,6 @@ fn get_order(mut xs: [f64; 4]) -> [usize; 4] {
     }
 
     order
-}
-
-/// Return Some(v_index), where sorted_vs[v_index] == point, if such a v_index exists;
-/// otherwise return None.
-fn find_point_index(sorted_vs: &[[usize; 3]; 4], point: &[usize; 3]) -> Option<usize> {
-    for (v_index, vertex) in sorted_vs.iter().enumerate() {
-        if point.iter().zip(vertex.iter()).all(|(pi, vi)| pi == vi) {
-            return Some(v_index);
-        }
-    }
-
-    None
 }
 
 /// Return the weight contributions of the tetrahedron vertices with energies given
