@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use vec_util::transpose_vecs;
 use tetra::{EvecGrid, all_weights, orbital_number};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DosValues {
     pub es: Vec<f64>,
     pub orbital_dos: Vec<Vec<f64>>,
