@@ -1,5 +1,0 @@
-remove use_curvature_correction parameter from dos_from_num
-
-Curvature correction vanishes identically in the case that x_{kn} is
-independent of k. Can always set use_curvature_correction to false
-for dos_from_num.
