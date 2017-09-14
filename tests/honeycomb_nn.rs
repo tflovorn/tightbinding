@@ -71,7 +71,8 @@ fn honeycomb_nn_dos() {
     let cache = EvecCache::new(hk_fn, bands, dims, k_start, k_stop);
 
     let num_energies = 1001;
-    let dos = dos_from_num(&cache, num_energies);
+    let energy_bounds = None;
+    let dos = dos_from_num(&cache, num_energies, energy_bounds);
 
     let prefix = "honeycomb_nn";
     write_dos_out(&dos, &prefix);

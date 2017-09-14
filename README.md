@@ -24,6 +24,11 @@ Requires liblapacke. To install on Debian-based distributions:
 
     sudo apt-get install liblapacke-dev
 
+Pre-commit hook checks that code installed by package `pre-commit` checks that
+code is unchanged after running `cargo fmt`. To get this command:
+
+    cargo install rustfmt
+
 ## Binaries
 
 ### `tb_w90_dos`

@@ -11,8 +11,15 @@ pub struct DosValues {
     pub total_dos: Vec<f64>,
 }
 
-pub fn dos_from_num<G: Sync + EvecGrid>(grid: &G, num_energies: usize) -> DosValues {
-    let (min_e, max_e) = grid.energy_bounds();
+pub fn dos_from_num<G: Sync + EvecGrid>(
+    grid: &G,
+    num_energies: usize,
+    energy_bounds: Option<(f64, f64)>,
+) -> DosValues {
+    let (min_e, max_e) = match energy_bounds {
+        Some((min_e, max_e)) => (min_e, max_e),
+        None => grid.energy_bounds(),
+    };
 
     let es = Array1::linspace(min_e, max_e, num_energies)
         .as_slice()

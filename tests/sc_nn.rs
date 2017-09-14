@@ -60,7 +60,8 @@ fn cubic_nn() {
     assert!(is_near_float(fermi_mid, mid_energy, eps_abs, eps_rel));
 
     let num_energies = 10;
-    let dos = dos_from_num(&cache, num_energies);
+    let energy_bounds = None;
+    let dos = dos_from_num(&cache, num_energies, energy_bounds);
 
     let expected_dos = vec![
         0.018518518518518514,
@@ -100,7 +101,8 @@ fn sc_nn_dos() {
     let cache = EvecCache::new(hk_fn, bands, dims, k_start, k_stop);
 
     let num_energies = 1001;
-    let dos = dos_from_num(&cache, num_energies);
+    let energy_bounds = None;
+    let dos = dos_from_num(&cache, num_energies, energy_bounds);
 
     let prefix = "sc_nn";
     write_dos_out(&dos, &prefix);

@@ -20,13 +20,46 @@ fn main() {
             Arg::with_name("num_energies")
                 .long("num_energies")
                 .takes_value(true)
-                .default_value("1000"),
+                .default_value("1000")
+                .help("Number of energy values to include in the calculation."),
+        )
+        .arg(
+            Arg::with_name("min_energy")
+                .long("min_energy")
+                .takes_value(true)
+                .help(
+                    "Minimum energy value to include in the calculation. \
+                      If either min_energy or max_energy is specified, must specify the other.",
+                ),
+        )
+        .arg(
+            Arg::with_name("max_energy")
+                .long("max_energy")
+                .takes_value(true)
+                .help(
+                    "Maximum energy value to include in the calculation. \
+                      If either min_energy or max_energy is specified, must specify the other.",
+                ),
         )
         .arg(Arg::with_name("prefix").index(1).required(true))
         .get_matches();
 
     let prefix = args.value_of("prefix").unwrap();
     let num_energies = args.value_of("num_energies").unwrap().parse().unwrap();
+
+    let (min_e, max_e) = (args.value_of("min_energy"), args.value_of("max_energy"));
+
+    // If min_energy and max_energy are both specified, energy_bounds = (min_e, max_e).
+    // Otherwise, energy_bounds = None.
+    let energy_bounds = match min_e {
+        Some(min_e) => {
+            match max_e {
+                Some(max_e) => Some((min_e.parse().unwrap(), max_e.parse().unwrap())),
+                None => None,
+            }
+        }
+        None => None,
+    };
 
     let work_base = get_work_base().unwrap();
     let work = build_work(&work_base, args.value_of("subdir"), prefix);
@@ -45,7 +78,7 @@ fn main() {
     let hk_fn = |k| hk_lat(&model, &k);
 
     let cache = EvecCache::new(hk_fn, model.bands(), dims, k_start, k_stop);
-    let dos = dos_from_num(&cache, num_energies);
+    let dos = dos_from_num(&cache, num_energies, energy_bounds);
 
     let out_path = format!("{}_dos.json", prefix);
 
