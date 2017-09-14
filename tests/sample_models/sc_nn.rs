@@ -3,7 +3,7 @@ extern crate ndarray;
 extern crate tightbinding;
 
 use std::f64::consts::PI;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use num_complex::Complex64;
 use ndarray::Array2;
 use tightbinding::Model;
@@ -14,7 +14,7 @@ use tightbinding::Model;
 ///     \epsilon(k) = -2 * t * (cos(k_x a) + cos(k_y a) + cos(k_z a))
 #[derive(Clone)]
 pub struct SimpleCubicNNModel {
-    hrs: HashMap<[i32; 3], Array2<Complex64>>,
+    hrs: BTreeMap<[i32; 3], Array2<Complex64>>,
     d: Array2<f64>,
 }
 
@@ -24,7 +24,7 @@ impl SimpleCubicNNModel {
     // only use some of them - don't want to be warned about this.
     #[allow(dead_code)]
     pub fn new(t: f64, a: f64) -> SimpleCubicNNModel {
-        let mut hrs = HashMap::new();
+        let mut hrs = BTreeMap::new();
 
         let mt = Complex64::new(-t, 0.0);
 
@@ -49,7 +49,7 @@ impl SimpleCubicNNModel {
 }
 
 impl Model for SimpleCubicNNModel {
-    fn hrs(&self) -> &HashMap<[i32; 3], Array2<Complex64>> {
+    fn hrs(&self) -> &BTreeMap<[i32; 3], Array2<Complex64>> {
         &self.hrs
     }
 

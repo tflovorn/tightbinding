@@ -3,7 +3,7 @@ extern crate ndarray;
 extern crate tightbinding;
 
 use std::f64::consts::PI;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use num_complex::Complex64;
 use ndarray::{Array2, arr2};
 use tightbinding::Model;
@@ -12,14 +12,14 @@ use tightbinding::Model;
 /// nearest-neighbor hopping.
 #[derive(Clone)]
 pub struct HoneycombNNModel {
-    hrs: HashMap<[i32; 3], Array2<Complex64>>,
+    hrs: BTreeMap<[i32; 3], Array2<Complex64>>,
     d: Array2<f64>,
 }
 
 impl HoneycombNNModel {
     #[allow(dead_code)]
     pub fn new(t: f64, a: f64) -> HoneycombNNModel {
-        let mut hrs = HashMap::new();
+        let mut hrs = BTreeMap::new();
 
         let zero = Complex64::new(0.0, 0.0);
         let mt = Complex64::new(-t, 0.0);
@@ -55,7 +55,7 @@ impl HoneycombNNModel {
 }
 
 impl Model for HoneycombNNModel {
-    fn hrs(&self) -> &HashMap<[i32; 3], Array2<Complex64>> {
+    fn hrs(&self) -> &BTreeMap<[i32; 3], Array2<Complex64>> {
         &self.hrs
     }
 
