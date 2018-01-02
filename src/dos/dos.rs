@@ -26,7 +26,7 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         .unwrap()
         .to_vec();
 
-    let use_curvature_correction = false;
+    let use_curvature_correction = true;
 
     let orbital_nums = transpose_vecs(
         &(es.par_iter()
