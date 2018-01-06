@@ -16,7 +16,9 @@ fn diamond_dos(bench: &mut Bencher) {
     let num_energies = 100;
     let energy_bounds = None;
 
-    bench.iter(|| { dos_from_num(&cache, num_energies, energy_bounds); });
+    bench.iter(|| {
+        dos_from_num(&cache, num_energies, energy_bounds);
+    });
 }
 
 fn diamond_cache() -> EvecCache {

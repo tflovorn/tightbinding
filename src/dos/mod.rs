@@ -1,2 +1,2 @@
 mod dos;
-pub use dos::dos::{DosValues, dos_from_num};
+pub use dos::dos::{dos_from_num, DosValues};

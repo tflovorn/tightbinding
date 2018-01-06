@@ -1,5 +1,5 @@
-extern crate num_complex;
 extern crate ndarray;
+extern crate num_complex;
 extern crate tightbinding;
 
 use std::f64::consts::PI;
@@ -42,9 +42,9 @@ impl SimpleCubicNNModel {
 
     #[allow(dead_code)]
     pub fn epsilon(t: f64, k_lat: &[f64; 3]) -> f64 {
-        -2.0 * t *
-            ((2.0 * PI * k_lat[0]).cos() + (2.0 * PI * k_lat[1]).cos() +
-                (2.0 * PI * k_lat[2]).cos())
+        -2.0 * t
+            * ((2.0 * PI * k_lat[0]).cos() + (2.0 * PI * k_lat[1]).cos()
+                + (2.0 * PI * k_lat[2]).cos())
     }
 }
 

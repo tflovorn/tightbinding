@@ -13,9 +13,8 @@ pub fn find_fermi<G: EnergyGrid>(grid: &G, occupation: f64) -> f64 {
     };
 
     let eps_abs = 1e-12; // occupation has scale ~ 1.
-    bisect(occupation_error, e_min, e_max, eps_abs).expect(
-        "min and max energy do not bracket Fermi energy",
-    )
+    bisect(occupation_error, e_min, e_max, eps_abs)
+        .expect("min and max energy do not bracket Fermi energy")
 }
 
 fn bisect<F>(f: F, a: f64, b: f64, eps_abs: f64) -> Option<f64>

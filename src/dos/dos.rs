@@ -2,7 +2,7 @@ use ndarray::Array1;
 use rayon::prelude::*;
 
 use vec_util::transpose_vecs;
-use tetra::{EvecGrid, all_weights, orbital_number};
+use tetra::{all_weights, orbital_number, EvecGrid};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DosValues {
@@ -30,11 +30,11 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
 
     let orbital_nums = transpose_vecs(
         &(es.par_iter()
-              .map(|e| {
-            let w = all_weights(grid, *e, use_curvature_correction);
-            orbital_number(grid, &w).to_vec()
-        })
-              .collect()),
+            .map(|e| {
+                let w = all_weights(grid, *e, use_curvature_correction);
+                orbital_number(grid, &w).to_vec()
+            })
+            .collect()),
     );
 
     // Use lowest-order central difference for DOS:

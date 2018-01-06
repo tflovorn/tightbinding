@@ -18,8 +18,7 @@ pub fn write_dos_out(dos: &DosValues, test_prefix: &str) {
 pub fn read_dos(test_prefix: &str) -> DosValues {
     let expected_path = PathBuf::from(format!(
         "test_data/{}/test_{}_dos.json",
-        test_prefix,
-        test_prefix
+        test_prefix, test_prefix
     ));
     let expected_file = File::open(expected_path).expect(&format!(
         "Error opening expected value file: {}_dos expects to be run in crate root.",

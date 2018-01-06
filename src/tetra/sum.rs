@@ -36,8 +36,8 @@ pub fn orbital_expectation_values<G: EvecGrid>(
             for band_index in 0..grid.bands() {
                 let u = grid.evec()[[grid_index, orbital_index, band_index]];
 
-                evs[orbital_index] += u.norm_sqr() * x_kn[[grid_index, band_index]] *
-                    w_kn[[grid_index, band_index]];
+                evs[orbital_index] +=
+                    u.norm_sqr() * x_kn[[grid_index, band_index]] * w_kn[[grid_index, band_index]];
             }
         }
     }

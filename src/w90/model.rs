@@ -22,9 +22,8 @@ impl W90Model {
 
         {
             let mut f = File::open(hr_path)?;
-            f.read_to_string(&mut contents).expect(
-                "error reading hr.dat file",
-            );
+            f.read_to_string(&mut contents)
+                .expect("error reading hr.dat file");
         }
 
         let header = extract_hr_header(&contents);
@@ -167,7 +166,6 @@ fn extract_hr_model(contents: &str, header: &HrHeader) -> BTreeMap<[i32; 3], Arr
 
                 hrs_entry[[ip, i]] = Complex64::new(val_re / degen, val_im / degen);
             }
-
         }
 
         hrs.insert(r, hrs_entry);

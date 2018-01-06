@@ -1,6 +1,6 @@
-extern crate num_complex;
-extern crate ndarray;
 extern crate linxal;
+extern crate ndarray;
+extern crate num_complex;
 extern crate tightbinding;
 
 use ndarray::Axis;
@@ -9,14 +9,14 @@ use linxal::types::Symmetric;
 use tightbinding::float::is_near_float;
 use tightbinding::Model;
 use tightbinding::fourier::hk_lat;
-use tightbinding::tetra::{KGrid, EnergyGrid, EvecCache};
+use tightbinding::tetra::{EnergyGrid, EvecCache, KGrid};
 use tightbinding::dos::dos_from_num;
 
 mod sample_models;
 use sample_models::HoneycombNNModel;
 
 mod dos_util;
-use dos_util::{write_dos_out, read_dos, check_dos};
+use dos_util::{check_dos, read_dos, write_dos_out};
 
 #[test]
 fn honeycomb_nn() {
@@ -42,10 +42,11 @@ fn honeycomb_nn() {
         let solution = SymEigen::compute(&hk, Symmetric::Upper, true).unwrap();
         let es = solution.values.to_vec();
 
-        for (e_grid, e_expected) in
-            cache.energy().subview(Axis(0), grid_index).iter().zip(
-                es.iter(),
-            )
+        for (e_grid, e_expected) in cache
+            .energy()
+            .subview(Axis(0), grid_index)
+            .iter()
+            .zip(es.iter())
         {
             assert!(is_near_float(*e_grid, *e_expected, eps_abs, eps_rel));
         }

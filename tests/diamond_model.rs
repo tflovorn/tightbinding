@@ -1,10 +1,10 @@
-extern crate num_complex;
 extern crate ndarray;
+extern crate num_complex;
 extern crate tightbinding;
 
 use num_complex::Complex64;
 use ndarray::Array2;
-use tightbinding::float::{is_near_float, is_near_complex};
+use tightbinding::float::{is_near_complex, is_near_float};
 use tightbinding::Model;
 use tightbinding::fourier::hk_lat;
 use tightbinding::tetra::EvecCache;
@@ -14,7 +14,7 @@ use tightbinding::w90::W90Model;
 use tightbinding::qe::Scf;
 
 mod dos_util;
-use dos_util::{write_dos_out, read_dos, check_dos};
+use dos_util::{check_dos, read_dos, write_dos_out};
 
 #[test]
 fn diamond_model() {

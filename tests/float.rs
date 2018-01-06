@@ -2,7 +2,7 @@ extern crate num_complex;
 extern crate tightbinding;
 
 use num_complex::Complex64;
-use tightbinding::float::{is_near_float, is_near_complex};
+use tightbinding::float::{is_near_complex, is_near_float};
 
 #[test]
 fn is_near() {

@@ -32,9 +32,8 @@ impl Scf {
 
         {
             let mut f = File::open(scf_path)?;
-            f.read_to_string(&mut contents).expect(
-                "error reading SCF data-file.xml file",
-            );
+            f.read_to_string(&mut contents)
+                .expect("error reading SCF data-file.xml file");
         }
 
         let package = parse(&contents).unwrap();

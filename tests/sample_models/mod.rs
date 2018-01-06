@@ -1,5 +1,5 @@
-extern crate num_complex;
 extern crate ndarray;
+extern crate num_complex;
 extern crate tightbinding;
 
 mod sc_nn;

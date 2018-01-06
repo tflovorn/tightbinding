@@ -27,7 +27,7 @@ Requires liblapacke. To install on Debian-based distributions:
 Pre-commit hook checks that code installed by package `pre-commit` checks that
 code is unchanged after running `cargo fmt`. To get this command:
 
-    cargo install rustfmt
+    rustup run nightly cargo install rustfmt-nightly
 
 ## Binaries
 

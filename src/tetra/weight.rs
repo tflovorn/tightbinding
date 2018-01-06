@@ -185,14 +185,14 @@ fn weight_contrib<G: EnergyGrid>(
         ws[3] = c * (fermi - e1) / (e4 - e1);
     } else if e2 <= fermi && fermi <= e3 {
         let c_1 = fac * (fermi - e1).powi(2) / ((e4 - e1) * (e3 - e1));
-        let c_2 = fac * (fermi - e1) * (fermi - e2) * (e3 - fermi) /
-            ((e4 - e1) * (e3 - e2) * (e3 - e1));
+        let c_2 =
+            fac * (fermi - e1) * (fermi - e2) * (e3 - fermi) / ((e4 - e1) * (e3 - e2) * (e3 - e1));
         let c_3 = fac * (fermi - e2).powi(2) * (e4 - fermi) / ((e4 - e2) * (e3 - e2) * (e4 - e1));
 
-        ws[0] = c_1 + (c_1 + c_2) * (e3 - fermi) / (e3 - e1) +
-            (c_1 + c_2 + c_3) * (e4 - fermi) / (e4 - e1);
-        ws[1] = c_1 + c_2 + c_3 + (c_2 + c_3) * (e3 - fermi) / (e3 - e2) +
-            c_3 * (e4 - fermi) / (e4 - e2);
+        ws[0] = c_1 + (c_1 + c_2) * (e3 - fermi) / (e3 - e1)
+            + (c_1 + c_2 + c_3) * (e4 - fermi) / (e4 - e1);
+        ws[1] = c_1 + c_2 + c_3 + (c_2 + c_3) * (e3 - fermi) / (e3 - e2)
+            + c_3 * (e4 - fermi) / (e4 - e2);
         ws[2] = (c_1 + c_2) * (fermi - e1) / (e3 - e1) + (c_2 + c_3) * (fermi - e2) / (e3 - e2);
         ws[3] = (c_1 + c_2 + c_3) * (fermi - e1) / (e4 - e1) + c_3 * (fermi - e2) / (e4 - e2);
     } else if e3 <= fermi && fermi <= e4 {
@@ -201,8 +201,8 @@ fn weight_contrib<G: EnergyGrid>(
         ws[0] = fac - c * (e4 - fermi) / (e4 - e1);
         ws[1] = fac - c * (e4 - fermi) / (e4 - e2);
         ws[2] = fac - c * (e4 - fermi) / (e4 - e3);
-        ws[3] = fac -
-            c * (4.0 - (1.0 / (e4 - e1) + 1.0 / (e4 - e2) + 1.0 / (e4 - e3)) * (e4 - fermi));
+        ws[3] =
+            fac - c * (4.0 - (1.0 / (e4 - e1) + 1.0 / (e4 - e2) + 1.0 / (e4 - e3)) * (e4 - fermi));
     } else {
         // fermi > e4
         ws[0] = fac;

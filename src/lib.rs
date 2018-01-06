@@ -3,16 +3,16 @@
 
 #[macro_use]
 extern crate error_chain;
-extern crate num_complex;
-extern crate ndarray;
+extern crate itertools;
 extern crate linxal;
+extern crate ndarray;
+extern crate num_complex;
+extern crate rayon;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate sxd_document;
 extern crate sxd_xpath;
-extern crate itertools;
-extern crate rayon;
 
 pub mod float;
 pub mod vec_util;

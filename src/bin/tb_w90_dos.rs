@@ -3,8 +3,8 @@ extern crate serde_json;
 extern crate tightbinding;
 
 use std::fs::File;
-use clap::{Arg, App};
-use tightbinding::paths::{get_work_base, build_work, get_scf_path, get_hr_path};
+use clap::{App, Arg};
+use tightbinding::paths::{build_work, get_hr_path, get_scf_path, get_work_base};
 use tightbinding::Model;
 use tightbinding::w90::W90Model;
 use tightbinding::qe::Scf;
@@ -29,7 +29,7 @@ fn main() {
                 .takes_value(true)
                 .help(
                     "Minimum energy value to include in the calculation. \
-                      If either min_energy or max_energy is specified, must specify the other.",
+                     If either min_energy or max_energy is specified, must specify the other.",
                 ),
         )
         .arg(
@@ -38,7 +38,7 @@ fn main() {
                 .takes_value(true)
                 .help(
                     "Maximum energy value to include in the calculation. \
-                      If either min_energy or max_energy is specified, must specify the other.",
+                     If either min_energy or max_energy is specified, must specify the other.",
                 ),
         )
         .arg(Arg::with_name("prefix").index(1).required(true))
@@ -52,12 +52,10 @@ fn main() {
     // If min_energy and max_energy are both specified, energy_bounds = (min_e, max_e).
     // Otherwise, energy_bounds = None.
     let energy_bounds = match min_e {
-        Some(min_e) => {
-            match max_e {
-                Some(max_e) => Some((min_e.parse().unwrap(), max_e.parse().unwrap())),
-                None => None,
-            }
-        }
+        Some(min_e) => match max_e {
+            Some(max_e) => Some((min_e.parse().unwrap(), max_e.parse().unwrap())),
+            None => None,
+        },
         None => None,
     };
 

@@ -14,8 +14,8 @@ pub fn hk_lat<M: Model>(m: &M, k_lat: &[f64; 3]) -> Array2<Complex64> {
     let mut hk = Array2::<Complex64>::zeros((m.bands(), m.bands()));
 
     for (r_lat, hr) in m.hrs() {
-        let k_dot_r = 2.0 * PI *
-            k_lat
+        let k_dot_r = 2.0 * PI
+            * k_lat
                 .iter()
                 .zip(r_lat)
                 .map(|(&ki, &ri)| ki * (ri as f64))

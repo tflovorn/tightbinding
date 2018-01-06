@@ -251,10 +251,8 @@ impl EvecCache {
 
         for (k_index, sol) in solutions.into_iter().enumerate() {
             energy.subview_mut(Axis(0), k_index).assign(&sol.values);
-            evec.subview_mut(Axis(0), k_index).assign(
-                &sol.right_vectors
-                    .unwrap(),
-            );
+            evec.subview_mut(Axis(0), k_index)
+                .assign(&sol.right_vectors.unwrap());
         }
 
         EvecCache {

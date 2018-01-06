@@ -19,9 +19,8 @@ impl DftBands {
 
         {
             let mut f = File::open(bands_path)?;
-            f.read_to_string(&mut contents).expect(
-                "error reading bands.dat file",
-            );
+            f.read_to_string(&mut contents)
+                .expect("error reading bands.dat file");
         }
 
         let (num_bands, num_ks) = extract_bands_header(&contents);
