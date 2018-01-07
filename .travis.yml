@@ -15,3 +15,8 @@ script:
     - cargo build --verbose
     - cargo test --verbose
     - cargo test --verbose --release -- --ignored
+
+addons:
+    apt:
+        packages:
+            - gfortran
