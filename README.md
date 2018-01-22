@@ -1,5 +1,7 @@
 # tightbinding
 
+[![Build Status](https://travis-ci.org/tflovorn/tightbinding.svg?branch=master)](https://travis-ci.org/tflovorn/tightbinding)
+
 Tools for working with tight-binding models (defined by a map from lattice
 vectors R to H(R) = <0|H|R>) and models defined directly on k-space as H(k).
 
@@ -20,14 +22,11 @@ This assumes $HOME/bin is on your $PATH. If it is not, add the following to ~/.b
 
     export PATH=$HOME/bin:$PATH
 
-Requires liblapacke. To install on Debian-based distributions:
-
-    sudo apt-get install liblapacke-dev
-
 Pre-commit hook checks that code installed by package `pre-commit` checks that
 code is unchanged after running `cargo fmt`. To get this command:
 
-    rustup run nightly cargo install rustfmt-nightly
+    rustup install nightly
+    rustup run nightly cargo install rustfmt-nightly --force
 
 ## Binaries
 
