@@ -2,7 +2,7 @@ use ndarray::Array1;
 use rayon::prelude::*;
 
 use vec_util::transpose_vecs;
-use tetra::{all_weights, orbital_number, EvecGrid};
+use tetra::{all_weights, orbital_number, total_number, EnergyGrid, EvecGrid};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DosValues {
@@ -69,5 +69,61 @@ pub fn dos_from_num<G: Sync + EvecGrid>(
         es: es[1..num_energies - 1].to_vec(),
         orbital_dos,
         total_dos,
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TotalDosValues {
+    pub total_dos_es: Vec<f64>,
+    pub total_dos: Vec<f64>,
+    pub total_num_es: Vec<f64>,
+    pub total_num: Vec<f64>,
+}
+
+pub fn total_dos_from_num<G: Sync + EnergyGrid>(
+    grid: &G,
+    num_energies: usize,
+    energy_bounds: Option<(f64, f64)>,
+) -> TotalDosValues {
+    let (min_e, max_e) = match energy_bounds {
+        Some((min_e, max_e)) => (min_e, max_e),
+        None => grid.energy_bounds(),
+    };
+
+    let es = Array1::linspace(min_e, max_e, num_energies)
+        .as_slice()
+        .unwrap()
+        .to_vec();
+
+    let use_curvature_correction = true;
+
+    let total_num: Vec<f64> = es.par_iter()
+        .map(|e| {
+            let w = all_weights(grid, *e, use_curvature_correction);
+            total_number(&w)
+        })
+        .collect();
+
+    // Use lowest-order central difference for DOS:
+    // DOS(E_i) \approx 0.5 * (n(E_{i + 1}) - n(E_{i - 1})) / (E_i - E_{i - 1}).
+    // Since we use this, we have two fewer DOS points than energies.
+    let num_dos = num_energies - 2;
+
+    let mut total_dos = Vec::with_capacity(num_dos);
+
+    for (i, e_i) in es.iter().enumerate() {
+        if i == 0 || i == num_energies - 1 {
+            continue;
+        }
+        let delta: f64 = e_i - es[i - 1];
+
+        total_dos.push(0.5 * (total_num[i + 1] - total_num[i - 1]) / delta);
+    }
+
+    TotalDosValues {
+        total_dos_es: es[1..num_energies - 1].to_vec(),
+        total_dos,
+        total_num_es: es,
+        total_num,
     }
 }

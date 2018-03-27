@@ -305,3 +305,92 @@ impl EvecGrid for EvecCache {
         &self.evec
     }
 }
+
+/// Cache storing the eigenvalues of a model computed
+/// on the k-point grid defined by `KCache`.
+/// TODO - could use this in `EvecCache`, having `EvecCache` store directly
+/// only the additional eigenvector information.
+pub struct EnergyCache {
+    kcache: KCache,
+    bands: usize,
+    energy: Array2<f64>,
+}
+
+impl EnergyCache {
+    /// Construct a new `EvalCache` from a list of energies, which is assumed to be
+    /// taken from a uniform sample of the Brillouin zone, given by the nested list `Es`,
+    /// which has the same k-point assignment (in reciprocal lattice coordinates) as `KGrid`.
+    /// The energy at point `(k0, k1, k2)` with band index `m` is given by `Es[k0][k1][k2][m]`.
+    ///
+    /// Designed for ingress from external source of energy data.
+    pub fn new(es: &Vec<Vec<Vec<Vec<f64>>>>) -> EnergyCache {
+        let dims = [es.len(), es[0].len(), es[0][0].len()];
+        let bands = es[0][0][0].len();
+        let k_start = [0.0, 0.0, 0.0];
+        let k_stop = [1.0, 1.0, 1.0];
+        let kcache = KCache::new(dims, k_start, k_stop);
+
+        let mut energy = Array2::zeros([kcache.points.len(), bands]);
+
+        for k0 in 0..dims[0] + 1 {
+            // Since the kcache samples points in [0, 1] but `es` samples points in [0, 1),
+            // we need to explicitly wrap the last point in each dimension to its periodic image.
+            let k0p = if k0 == dims[0] { 0 } else { k0 };
+
+            for k1 in 0..dims[1] + 1 {
+                let k1p = if k1 == dims[1] { 0 } else { k1 };
+
+                for k2 in 0..dims[2] + 1 {
+                    let k2p = if k2 == dims[2] { 0 } else { k2 };
+
+                    let i = get_grid_index(&[k0, k1, k2], &dims);
+                    for m in 0..bands {
+                        energy[[i, m]] = es[k0p][k1p][k2p][m];
+                    }
+                }
+            }
+        }
+
+        EnergyCache {
+            kcache,
+            bands,
+            energy,
+        }
+    }
+}
+
+impl KGrid for EnergyCache {
+    fn dims(&self) -> [usize; 3] {
+        self.kcache.dims
+    }
+
+    fn points(&self) -> &Vec<[usize; 3]> {
+        &self.kcache.points
+    }
+
+    fn grid_index(&self, point: &[usize; 3]) -> usize {
+        get_grid_index(point, &self.kcache.dims)
+    }
+
+    fn ks(&self) -> &Vec<[f64; 3]> {
+        &self.kcache.ks
+    }
+
+    fn k_range(&self) -> ([f64; 3], [f64; 3]) {
+        (self.kcache.k_start, self.kcache.k_stop)
+    }
+
+    fn tetra_volume(&self) -> f64 {
+        self.kcache.tetra_volume
+    }
+}
+
+impl EnergyGrid for EnergyCache {
+    fn energy(&self) -> &Array2<f64> {
+        &self.energy
+    }
+
+    fn bands(&self) -> usize {
+        self.bands
+    }
+}

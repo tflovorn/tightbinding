@@ -27,12 +27,16 @@ default-features = false
 features = ["netlib"]
 
 [package.metadata.precommit]
-fmt = "cargo +nightly fmt -- --write-mode=diff 2>&1"
+fmt = "cargo fmt -- --write-mode=diff 2>&1"
 test = "cargo test 2>&1"
 
 [[bin]]
 name = "tb_w90_dos"
 path = "src/bin/tb_w90_dos.rs"
+
+[[bin]]
+name = "dos_from_energies"
+path = "src/bin/dos_from_energies.rs"
 
 [[bench]]
 name = "diamond_dos"
