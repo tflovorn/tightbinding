@@ -33,6 +33,7 @@ fn main() {
         .arg(
             Arg::with_name("min_energy")
                 .long("min_energy")
+                .allow_hyphen_values(true)
                 .takes_value(true)
                 .help(
                     "Minimum energy value to include in the calculation. \
@@ -42,6 +43,7 @@ fn main() {
         .arg(
             Arg::with_name("max_energy")
                 .long("max_energy")
+                .allow_hyphen_values(true)
                 .takes_value(true)
                 .help(
                     "Maximum energy value to include in the calculation. \
