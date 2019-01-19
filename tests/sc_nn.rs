@@ -3,15 +3,15 @@ extern crate num_complex;
 extern crate serde_json;
 extern crate tightbinding;
 
-use std::f64::consts::PI;
-use num_complex::Complex64;
 use ndarray::Array2;
-use tightbinding::float::{is_near_complex, is_near_float};
-use tightbinding::Model;
-use tightbinding::fourier::{hk_cart, hk_lat};
-use tightbinding::tetra::{EnergyGrid, EvecCache, KGrid};
-use tightbinding::tetra::find_fermi;
+use num_complex::Complex64;
+use std::f64::consts::PI;
 use tightbinding::dos::dos_from_num;
+use tightbinding::float::{is_near_complex, is_near_float};
+use tightbinding::fourier::{hk_cart, hk_lat};
+use tightbinding::tetra::find_fermi;
+use tightbinding::tetra::{EnergyGrid, EvecCache, KGrid};
+use tightbinding::Model;
 
 mod sample_models;
 use sample_models::SimpleCubicNNModel;

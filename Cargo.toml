@@ -1,7 +1,7 @@
 [package]
 name = "tightbinding"
 version = "0.1.0"
-authors = ["Tim Lovorn <tflovorn@austin.utexas.edu>"]
+authors = ["Tim Lovorn <tflovorn@gmail.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
@@ -27,7 +27,7 @@ default-features = false
 features = ["netlib"]
 
 [package.metadata.precommit]
-fmt = "cargo fmt -- --write-mode=diff 2>&1"
+fmt = "cargo fmt -- --check"
 test = "cargo test 2>&1"
 
 [[bin]]
@@ -40,4 +40,5 @@ path = "src/bin/dos_from_energies.rs"
 
 [[bench]]
 name = "diamond_dos"
+path = "benches/diamond_dos.rs"
 harness = false

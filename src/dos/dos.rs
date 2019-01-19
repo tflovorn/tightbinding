@@ -1,8 +1,8 @@
 use ndarray::Array1;
 use rayon::prelude::*;
 
-use vec_util::transpose_vecs;
 use tetra::{all_weights, orbital_number, total_number, EnergyGrid, EvecGrid};
+use vec_util::transpose_vecs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DosValues {
@@ -97,7 +97,8 @@ pub fn total_dos_from_num<G: Sync + EnergyGrid>(
 
     let use_curvature_correction = true;
 
-    let total_num: Vec<f64> = es.par_iter()
+    let total_num: Vec<f64> = es
+        .par_iter()
         .map(|e| {
             let w = all_weights(grid, *e, use_curvature_correction);
             total_number(&w)

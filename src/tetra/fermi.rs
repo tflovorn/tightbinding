@@ -1,6 +1,6 @@
 use tetra::grid::EnergyGrid;
-use tetra::weight::all_weights;
 use tetra::sum::total_number;
+use tetra::weight::all_weights;
 
 pub fn find_fermi<G: EnergyGrid>(grid: &G, occupation: f64) -> f64 {
     let (e_min, e_max) = grid.energy_bounds();

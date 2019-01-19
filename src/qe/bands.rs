@@ -1,10 +1,10 @@
-use std::f64::consts::PI;
 use std::cmp::min;
-use std::str;
-use std::path::Path;
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io;
 use std::io::Read;
+use std::path::Path;
+use std::str;
 
 use vec_util::transpose_vecs;
 

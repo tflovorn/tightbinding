@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 mod errors {
-    error_chain!{}
+    error_chain! {}
 }
 
 use self::errors::*;

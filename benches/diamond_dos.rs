@@ -3,12 +3,12 @@ extern crate bencher;
 extern crate tightbinding;
 
 use bencher::Bencher;
-use tightbinding::Model;
-use tightbinding::w90::W90Model;
-use tightbinding::qe::Scf;
-use tightbinding::fourier::hk_lat;
-use tightbinding::tetra::EvecCache;
 use tightbinding::dos::dos_from_num;
+use tightbinding::fourier::hk_lat;
+use tightbinding::qe::Scf;
+use tightbinding::tetra::EvecCache;
+use tightbinding::w90::W90Model;
+use tightbinding::Model;
 
 fn diamond_dos(bench: &mut Bencher) {
     let cache = diamond_cache();

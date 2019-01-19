@@ -1,11 +1,11 @@
-use std::str;
+use ndarray::Array2;
+use num_complex::Complex64;
 use std::collections::BTreeMap;
-use std::path::Path;
 use std::fs::File;
 use std::io;
 use std::io::Read;
-use num_complex::Complex64;
-use ndarray::Array2;
+use std::path::Path;
+use std::str;
 
 use model::Model;
 

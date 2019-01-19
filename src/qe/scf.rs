@@ -1,10 +1,10 @@
-use std::path::Path;
+use ndarray::Array2;
 use std::fs::File;
 use std::io;
 use std::io::Read;
-use ndarray::Array2;
-use sxd_document::parser::parse;
+use std::path::Path;
 use sxd_document::dom::Document;
+use sxd_document::parser::parse;
 use sxd_xpath::evaluate_xpath;
 
 use units::{ANGSTROM_PER_BOHR, EV_PER_HARTREE};

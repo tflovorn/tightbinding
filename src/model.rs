@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
-use num_complex::Complex64;
 use ndarray::Array2;
+use num_complex::Complex64;
+use std::collections::BTreeMap;
 
 /// Tight-binding model specified by (R, H(R)) pairs.
 pub trait Model: Clone {

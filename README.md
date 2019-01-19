@@ -25,8 +25,7 @@ This assumes $HOME/bin is on your $PATH. If it is not, add the following to ~/.b
 Pre-commit hook checks that code installed by package `pre-commit` checks that
 code is unchanged after running `cargo fmt`. To get this command:
 
-    rustup install nightly
-    rustup run nightly cargo install rustfmt-nightly --force
+    rustup component add rustfmt
 
 ## Binaries
 

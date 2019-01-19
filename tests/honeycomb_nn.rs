@@ -3,14 +3,14 @@ extern crate ndarray;
 extern crate num_complex;
 extern crate tightbinding;
 
-use ndarray::Axis;
 use linxal::eigenvalues::SymEigen;
 use linxal::types::Symmetric;
+use ndarray::Axis;
+use tightbinding::dos::dos_from_num;
 use tightbinding::float::is_near_float;
-use tightbinding::Model;
 use tightbinding::fourier::hk_lat;
 use tightbinding::tetra::{EnergyGrid, EvecCache, KGrid};
-use tightbinding::dos::dos_from_num;
+use tightbinding::Model;
 
 mod sample_models;
 use sample_models::HoneycombNNModel;

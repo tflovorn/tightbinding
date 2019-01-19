@@ -2,10 +2,10 @@ extern crate ndarray;
 extern crate num_complex;
 extern crate tightbinding;
 
-use std::f64::consts::PI;
-use std::collections::BTreeMap;
+use ndarray::{arr2, Array2};
 use num_complex::Complex64;
-use ndarray::{Array2, arr2};
+use std::collections::BTreeMap;
+use std::f64::consts::PI;
 use tightbinding::Model;
 
 /// One-band tight-binding model on the honeycomb lattice with uniform
@@ -44,7 +44,8 @@ impl HoneycombNNModel {
         let mut hk = Array2::zeros((2, 2));
 
         hk[[0, 1]] = t
-            * (1.0 + (Complex64::i() * 2.0 * PI * k_lat[1]).exp()
+            * (1.0
+                + (Complex64::i() * 2.0 * PI * k_lat[1]).exp()
                 + (Complex64::i() * 2.0 * PI * (k_lat[0] + k_lat[1])).exp());
         hk[[1, 0]] = hk[[0, 1]].conj();
 

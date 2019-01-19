@@ -1,7 +1,7 @@
-use std::f64::MAX;
 use ndarray::Array2;
-use tetra::grid::EnergyGrid;
+use std::f64::MAX;
 use tetra::dos::dos_contrib;
+use tetra::grid::EnergyGrid;
 
 /// Return an array with elements `w[[grid_index, band_index]]` which gives the
 /// weight w_{kn} of each (k-point, band) pair to the expectation value
@@ -189,9 +189,13 @@ fn weight_contrib<G: EnergyGrid>(
             fac * (fermi - e1) * (fermi - e2) * (e3 - fermi) / ((e4 - e1) * (e3 - e2) * (e3 - e1));
         let c_3 = fac * (fermi - e2).powi(2) * (e4 - fermi) / ((e4 - e2) * (e3 - e2) * (e4 - e1));
 
-        ws[0] = c_1 + (c_1 + c_2) * (e3 - fermi) / (e3 - e1)
+        ws[0] = c_1
+            + (c_1 + c_2) * (e3 - fermi) / (e3 - e1)
             + (c_1 + c_2 + c_3) * (e4 - fermi) / (e4 - e1);
-        ws[1] = c_1 + c_2 + c_3 + (c_2 + c_3) * (e3 - fermi) / (e3 - e2)
+        ws[1] = c_1
+            + c_2
+            + c_3
+            + (c_2 + c_3) * (e3 - fermi) / (e3 - e2)
             + c_3 * (e4 - fermi) / (e4 - e2);
         ws[2] = (c_1 + c_2) * (fermi - e1) / (e3 - e1) + (c_2 + c_3) * (fermi - e2) / (e3 - e2);
         ws[3] = (c_1 + c_2 + c_3) * (fermi - e1) / (e4 - e1) + c_3 * (fermi - e2) / (e4 - e2);

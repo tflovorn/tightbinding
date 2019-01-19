@@ -1,10 +1,10 @@
 extern crate serde_json;
 extern crate tightbinding;
 
-use std::path::PathBuf;
 use std::fs::File;
-use tightbinding::float::is_near_float;
+use std::path::PathBuf;
 use tightbinding::dos::DosValues;
+use tightbinding::float::is_near_float;
 
 pub fn write_dos_out(dos: &DosValues, test_prefix: &str) {
     let out_path = PathBuf::from(format!("plot/test_{}_dos.json", test_prefix));

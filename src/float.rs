@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
 use num_complex::Complex64;
+use std::cmp::Ordering;
 
 pub fn is_near_float(x: f64, y: f64, eps_abs: f64, eps_rel: f64) -> bool {
     let diff = (x - y).abs();

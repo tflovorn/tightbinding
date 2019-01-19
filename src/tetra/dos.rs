@@ -9,7 +9,8 @@ pub fn dos_contrib<G: EnergyGrid>(grid: &G, e: f64, sorted_es: &[f64; 4]) -> f64
     } else if e1 <= e && e <= e2 {
         return fac * 3.0 * (e - e1).powi(2) / ((e2 - e1) * (e3 - e1) * (e4 - e1));
     } else if e2 <= e && e <= e3 {
-        return fac * (1.0 / ((e3 - e1) * (e4 - e1)))
+        return fac
+            * (1.0 / ((e3 - e1) * (e4 - e1)))
             * (3.0 * (e2 - e1) + 6.0 * (e - e2)
                 - 3.0 * ((e3 - e1) + (e4 - e2)) * (e - e2).powi(2) / ((e3 - e2) * (e4 - e2)));
     } else if e3 <= e && e <= e4 {

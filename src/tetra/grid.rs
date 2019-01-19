@@ -1,11 +1,11 @@
-use std::f64;
-use num_complex::Complex64;
-use ndarray::{Array2, Array3, Axis};
-use linxal::eigenvalues::SymEigen;
-use linxal::eigenvalues::types::Solution;
-use linxal::types::Symmetric;
 use itertools::multizip;
+use linxal::eigenvalues::types::Solution;
+use linxal::eigenvalues::SymEigen;
+use linxal::types::Symmetric;
+use ndarray::{Array2, Array3, Axis};
+use num_complex::Complex64;
 use rayon::prelude::*;
+use std::f64;
 
 use float::NonNan;
 

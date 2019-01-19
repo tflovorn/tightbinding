@@ -2,15 +2,15 @@ extern crate clap;
 extern crate serde_json;
 extern crate tightbinding;
 
-use std::fs::File;
 use clap::{App, Arg};
-use tightbinding::paths::{build_work, get_hr_path, get_scf_path, get_work_base};
-use tightbinding::Model;
-use tightbinding::w90::W90Model;
-use tightbinding::qe::Scf;
-use tightbinding::fourier::hk_lat;
-use tightbinding::tetra::EvecCache;
+use std::fs::File;
 use tightbinding::dos::dos_from_num;
+use tightbinding::fourier::hk_lat;
+use tightbinding::paths::{build_work, get_hr_path, get_scf_path, get_work_base};
+use tightbinding::qe::Scf;
+use tightbinding::tetra::EvecCache;
+use tightbinding::w90::W90Model;
+use tightbinding::Model;
 
 fn main() {
     let args = App::new("Plot DOS from Wannier90 tight-binding model")

@@ -2,12 +2,12 @@ extern crate clap;
 extern crate serde_json;
 extern crate tightbinding;
 
+use clap::{App, Arg};
+use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
-use std::fs::File;
-use clap::{App, Arg};
-use tightbinding::tetra::EnergyCache;
 use tightbinding::dos::total_dos_from_num;
+use tightbinding::tetra::EnergyCache;
 
 fn main() {
     let args = App::new("Plot DOS from sampled energies on Brillouin zone grid")

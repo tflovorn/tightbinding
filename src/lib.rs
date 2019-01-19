@@ -15,8 +15,8 @@ extern crate sxd_document;
 extern crate sxd_xpath;
 
 pub mod float;
-pub mod vec_util;
 pub mod units;
+pub mod vec_util;
 
 mod model;
 pub use model::Model;
@@ -27,5 +27,5 @@ pub mod w90;
 
 pub mod paths;
 
-pub mod tetra;
 pub mod dos;
+pub mod tetra;
